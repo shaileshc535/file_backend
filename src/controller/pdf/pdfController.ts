@@ -79,7 +79,6 @@ const UpdatePdfFile = async (req, res: Response) => {
 
     const fileData = await PdfSchema.findOne({
       _id: fileId,
-      // owner: user._id,
       isdeleted: false,
     }).populate("owner");
 
@@ -94,10 +93,7 @@ const UpdatePdfFile = async (req, res: Response) => {
     const requestData = {
       file_url: file_url,
       docname: req.body.docname,
-      // filename: req.file.filename,
-      // filetype: req.file.mimetype,
       filesize: req.file.size,
-      // is_editable: false,
       isupdated: true,
       updated_at: Date.now(),
     };
@@ -111,7 +107,6 @@ const UpdatePdfFile = async (req, res: Response) => {
 
     const updatedData = await PdfSchema.findOne({
       _id: fileId,
-      owner: user._id,
       isdeleted: false,
     });
 
@@ -252,7 +247,6 @@ const GetPdfFileById = async (req, res: Response) => {
 
     const result = await PdfSchema.find({
       _id: fileId,
-      // owner: user._id,
       isdeleted: false,
     }).populate("owner");
 
