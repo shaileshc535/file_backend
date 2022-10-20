@@ -79,11 +79,9 @@ const UpdatePdfFile = async (req, res: Response) => {
 
     const fileData = await PdfSchema.findOne({
       _id: fileId,
-      owner: user._id,
+      // owner: user._id,
       isdeleted: false,
     }).populate("owner");
-
-    // const file = JSON.parse(JSON.stringify(fileData));
 
     if (!fileData) {
       return res.status(400).json({
@@ -92,15 +90,6 @@ const UpdatePdfFile = async (req, res: Response) => {
         message: "File not found",
       });
     }
-
-    // if (fileData.is_editable !== true) {
-    //   return res.status(400).json({
-    //     type: "error",
-    //     status: 400,
-    //     message: `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`,
-    //     editable: fileData.is_editable,
-    //   });
-    // }
 
     const requestData = {
       file_url: file_url,
