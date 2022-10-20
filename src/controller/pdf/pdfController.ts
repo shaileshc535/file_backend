@@ -263,7 +263,7 @@ const GetPdfFileById = async (req, res: Response) => {
 
     const result = await PdfSchema.find({
       _id: fileId,
-      owner: user._id,
+      // owner: user._id,
       isdeleted: false,
     }).populate("owner");
 
