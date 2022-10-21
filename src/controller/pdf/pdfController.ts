@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PdfSchema from "../../modal/pdf.model";
 import SharedFileSchema from "../../modal/sharedFile.model";
 import { Response } from "express";
-// import StatusCodes from "http-status-codes";
-// import fs from "fs";
+import mongoose from "mongoose";
+
+const ObjectId = <any>mongoose.Types.ObjectId;
 
 export interface IPdf {
   owner: string;
@@ -68,8 +70,6 @@ const UpdatePdfFile = async (req, res: Response) => {
         message: "Please upload a file First",
       });
     }
-
-    const user = JSON.parse(JSON.stringify(req.user));
 
     const { fileId } = req.body;
 
@@ -193,9 +193,7 @@ const ListPdfFiles = async (req, res: Response) => {
     const user = JSON.parse(JSON.stringify(req.user));
     let { page, limit, sort, cond } = req.body;
 
-    if (user) {
-      cond = { owner: user._id, isdeleted: false, ...cond };
-    }
+    let search = "";
 
     if (!page || page < 1) {
       page = 1;
@@ -209,17 +207,57 @@ const ListPdfFiles = async (req, res: Response) => {
     if (!sort) {
       sort = { createdAt: -1 };
     }
+    if (typeof cond.search != "undefined" && cond.search != null) {
+      search = String(cond.search);
+      delete cond.search;
+    }
+
+    cond = [
+      {
+        $match: {
+          isdeleted: false,
+          owner: ObjectId(user._id),
+          $and: [
+            cond,
+            {
+              $or: [
+                { docname: { $regex: search, $options: "i" } },
+                { filename: { $regex: search, $options: "i" } },
+              ],
+            },
+          ],
+        },
+      },
+      { $sort: sort },
+      {
+        $facet: {
+          data: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          total: [
+            {
+              $count: "count",
+            },
+          ],
+        },
+      },
+    ];
 
     limit = parseInt(limit);
 
-    const result = await PdfSchema.find(cond)
-      .populate("owner")
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit);
+    // const result = await PdfSchema.find(cond)
+    //   .populate("owner")
+    //   .sort(sort)
+    //   .skip((page - 1) * limit)
+    //   .limit(limit);
 
-    const result_count = await PdfSchema.find(cond).count();
-    const totalPages = Math.ceil(result_count / limit);
+    const result = await PdfSchema.aggregate(cond);
+
+    let totalPages = 0;
+    if (result[0].total.length != 0) {
+      totalPages = Math.ceil(result[0].total[0].count / limit);
+    }
+
+    // const result_count = await PdfSchema.find(cond).count();
+    // const totalPages = Math.ceil(result_count / limit);
 
     return res.status(200).json({
       status: 200,
@@ -228,8 +266,8 @@ const ListPdfFiles = async (req, res: Response) => {
       page: page,
       limit: limit,
       totalPages: totalPages,
-      total: result_count,
-      data: result,
+      total: result[0].total.length != 0 ? result[0].total[0].count : 0,
+      data: result[0].data,
     });
   } catch (error) {
     return res.status(404).json({
@@ -243,7 +281,6 @@ const ListPdfFiles = async (req, res: Response) => {
 const GetPdfFileById = async (req, res: Response) => {
   try {
     const { fileId } = req.params;
-    const user = JSON.parse(JSON.stringify(req.user));
 
     const result = await PdfSchema.find({
       _id: fileId,
