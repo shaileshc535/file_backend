@@ -36,6 +36,7 @@ router.put("/review-file-fail", auth, controller.ReviewFail);
 router.put("/delete-file/:fileId", auth, controller.DeletePdfFile);
 router.post("/list-files", auth, controller.ListPdfFiles);
 router.get("/get-file/:fileId", auth, controller.GetPdfFileById);
+router.get("/file/:fileId", auth, controller.FileGetById);
 router.get(
   "/file-editable-check/:fileId",
   auth,
