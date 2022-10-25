@@ -83,7 +83,7 @@ const register = async (req, res) => {
     const response = await User.findByIdAndUpdate(data._id, { new: true });
 
     const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      // expiresIn: "1d",
     });
     res.status(200).json({
       status: 200,
