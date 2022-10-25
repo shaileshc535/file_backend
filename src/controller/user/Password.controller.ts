@@ -8,6 +8,7 @@ import sendEmail from "../../services/sendEmail";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import Joi from "joi";
+import logger from "../../logger";
 
 const forgotPassword = async (
   req: Request,
@@ -332,6 +333,7 @@ const ListAllUsers = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,

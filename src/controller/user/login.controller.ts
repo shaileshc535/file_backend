@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../../modal/user";
 import bcrypt from "bcryptjs";
+import logger from "../../logger";
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -10,6 +11,11 @@ const login = async (req, res) => {
       email: verifiedEmail,
     }).exec((err, user) => {
       if (err) {
+        logger.error({
+          type: "error",
+          status: 400,
+          message: err,
+        });
         res.status(400).send({
           type: "error",
           status: 400,
@@ -18,6 +24,11 @@ const login = async (req, res) => {
         return;
       }
       if (!user) {
+        logger.error({
+          type: "error",
+          status: 400,
+          message: "User Not Found",
+        });
         return res.status(400).send({
           type: "error",
           status: 400,
@@ -28,6 +39,11 @@ const login = async (req, res) => {
       const passwordIsValid = bcrypt.compareSync(password, user.password);
 
       if (!passwordIsValid) {
+        logger.error({
+          type: "error",
+          status: 400,
+          message: "Invalid Password!",
+        });
         return res.status(400).send({
           type: "error",
           status: 400,
@@ -48,8 +64,19 @@ const login = async (req, res) => {
           token: token,
         },
       });
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "User Successfully Logged-In",
+        data: {
+          ...user.toObject(),
+          token: token,
+        },
+      });
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,

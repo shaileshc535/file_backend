@@ -1,6 +1,7 @@
 import PdfSchema from "../../modal/pdf.model";
 import SharedFileSchema from "../../modal/sharedFile.model";
 import { Response } from "express";
+import logger from "../../logger";
 
 export interface ISHAREDFILE {
   senderId?: string;
@@ -30,6 +31,11 @@ const ShareFile = async (req, res: Response) => {
         const file = JSON.parse(JSON.stringify(fileData));
 
         if (file.owner._id !== user._id) {
+          logger.error({
+            type: "error",
+            status: 400,
+            message: `you don’t have permission to share this file. Please contact ${file.owner.fullname} for permission`,
+          });
           return res.status(400).json({
             type: "error",
             status: 400,
@@ -52,6 +58,13 @@ const ShareFile = async (req, res: Response) => {
 
         await newSharedFile.save();
 
+        logger.info({
+          type: "success",
+          status: 200,
+          message: "File Send successfully",
+          data: newSharedFile,
+        });
+
         res.status(200).json({
           type: "success",
           status: 200,
@@ -59,6 +72,13 @@ const ShareFile = async (req, res: Response) => {
           data: newSharedFile,
         });
       } else {
+        logger.error({
+          type: "success",
+          status: 400,
+          message: "File receiver is required",
+          data: "",
+        });
+
         res.status(400).json({
           type: "success",
           status: 400,
@@ -67,6 +87,12 @@ const ShareFile = async (req, res: Response) => {
         });
       }
     } else {
+      logger.error({
+        type: "success",
+        status: 400,
+        message: "File is required",
+        data: "",
+      });
       res.status(400).json({
         type: "success",
         status: 400,
@@ -75,6 +101,11 @@ const ShareFile = async (req, res: Response) => {
       });
     }
   } catch (error) {
+    logger.error({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -96,6 +127,12 @@ const GrandAccess = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.senderId._id !== user._id) {
+      logger.info({
+        type: "error",
+        status: 400,
+        message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
+
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -121,6 +158,12 @@ const GrandAccess = async (req, res: Response) => {
       isdeleted: false,
     });
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "File access changes to grand successfully",
+      data: updatedData.access,
+    });
     res.status(200).json({
       type: "success",
       status: 200,
@@ -128,6 +171,7 @@ const GrandAccess = async (req, res: Response) => {
       data: updatedData.access,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -149,6 +193,11 @@ const RevokeAccess = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.senderId._id !== user._id) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -174,6 +223,13 @@ const RevokeAccess = async (req, res: Response) => {
       isdeleted: false,
     });
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "File access changes to revoke successfully",
+      data: updatedData.access,
+    });
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -181,6 +237,7 @@ const RevokeAccess = async (req, res: Response) => {
       data: updatedData.access,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -202,6 +259,11 @@ const DeleteSharedFile = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.senderId._id !== user._id) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -221,6 +283,12 @@ const DeleteSharedFile = async (req, res: Response) => {
       requestData
     );
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Shared File deleted successfully",
+      data: "",
+    });
     res.status(200).json({
       type: "success",
       status: 200,
@@ -228,6 +296,7 @@ const DeleteSharedFile = async (req, res: Response) => {
       data: "",
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -271,6 +340,17 @@ const ListSenderFile = async (req, res: Response) => {
     const result_count = await SharedFileSchema.find(cond).count();
     const totalPages = Math.ceil(result_count / limit);
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Shared File list fetched successfully",
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      total: result_count,
+      data: result,
+    });
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -282,6 +362,7 @@ const ListSenderFile = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -325,6 +406,17 @@ const ListReceivedFile = async (req, res: Response) => {
     const result_count = await SharedFileSchema.find(cond).count();
     const totalPages = Math.ceil(result_count / limit);
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Received File list fetched successfully",
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      total: result_count,
+      data: result,
+    });
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -336,6 +428,7 @@ const ListReceivedFile = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -359,6 +452,12 @@ const ReceivedFileById = async (req, res: Response) => {
       .populate("receiverId")
       .populate("fileId");
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Received File details fetched successfully",
+      data: result,
+    });
     res.status(200).json({
       type: "success",
       status: 200,
@@ -366,6 +465,7 @@ const ReceivedFileById = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -389,6 +489,13 @@ const SendFileById = async (req, res: Response) => {
       .populate("receiverId")
       .populate("fileId");
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Send File details fetched successfully",
+      data: result,
+    });
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -396,6 +503,7 @@ const SendFileById = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -441,6 +549,17 @@ const getByFileId = async (req, res: Response) => {
     const result_count = await SharedFileSchema.find(cond).count();
     const totalPages = Math.ceil(result_count / limit);
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "File list fetched successfully",
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      total: result_count,
+      data: result,
+    });
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -452,6 +571,7 @@ const getByFileId = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,

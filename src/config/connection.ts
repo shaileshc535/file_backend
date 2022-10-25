@@ -1,5 +1,6 @@
 // import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
+import logger from "../logger";
 // import logger from "../logger";
 
 const getConnection = async (req, res, next) => {
@@ -9,10 +10,11 @@ const getConnection = async (req, res, next) => {
 
   try {
     await mongoose.connect(process.env.DATABASE_URI);
-    console.log("Database Connected to the MongoDB");
+    logger.info("Database Connected to the MongoDB");
+    // console.log("Database Connected to the MongoDB");
     next();
   } catch (error) {
-    console.log("Error in connecting to the MongoDB", error);
+    logger.error(error.message);
     return res
       .status(500)
       .json({
@@ -23,4 +25,5 @@ const getConnection = async (req, res, next) => {
       .end();
   }
 };
+
 export default getConnection;

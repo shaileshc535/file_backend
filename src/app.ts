@@ -9,11 +9,6 @@ import logger from "./logger";
 
 config();
 
-logger.info("information log");
-logger.warn("warning log");
-logger.error("error log");
-logger.debug("debug log");
-
 const app = express();
 
 app.use(express.json());
@@ -43,5 +38,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  return console.log(`Server is listening at http://localhost:${PORT}`);
+  return logger.info(`Server is listening at http://localhost:${PORT}`);
 });

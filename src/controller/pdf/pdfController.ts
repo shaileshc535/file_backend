@@ -3,6 +3,7 @@ import PdfSchema from "../../modal/pdf.model";
 import SharedFileSchema from "../../modal/sharedFile.model";
 import { Response } from "express";
 import mongoose from "mongoose";
+import logger from "../../logger";
 
 const ObjectId = <any>mongoose.Types.ObjectId;
 
@@ -26,6 +27,8 @@ const AddNewPdf = async (req, res: Response) => {
     const user = JSON.parse(JSON.stringify(req.user));
 
     if (!req.file) {
+      logger.error("Please upload a file");
+
       return res.status(400).json({
         message: "Please upload a file",
       });
@@ -46,6 +49,8 @@ const AddNewPdf = async (req, res: Response) => {
 
     await newFile.save();
 
+    logger.info("File Uploaded successfully");
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -53,6 +58,7 @@ const AddNewPdf = async (req, res: Response) => {
       data: newFile,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -64,6 +70,8 @@ const AddNewPdf = async (req, res: Response) => {
 const UpdatePdfFile = async (req, res: Response) => {
   try {
     if (!req.file) {
+      logger.error("Please upload a file First");
+
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -83,6 +91,8 @@ const UpdatePdfFile = async (req, res: Response) => {
     }).populate("owner");
 
     if (!fileData) {
+      logger.error("File not found");
+
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -127,6 +137,8 @@ const UpdatePdfFile = async (req, res: Response) => {
       isdeleted: false,
     });
 
+    logger.error("File Uploaded successfully.");
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -134,6 +146,8 @@ const UpdatePdfFile = async (req, res: Response) => {
       data: updatedData,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -164,6 +178,10 @@ const ReviewPdfFile = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.is_shared !== true) {
+      logger.error(
+        `This file is not a shared file. Please contact ${file.owner.fullname} for permission`
+      );
+
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -173,6 +191,9 @@ const ReviewPdfFile = async (req, res: Response) => {
     }
 
     if (file.is_signed !== true) {
+      logger.error(
+        `this file is not signed. Please contact ${file.owner.fullname} for permission`
+      );
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -199,6 +220,8 @@ const ReviewPdfFile = async (req, res: Response) => {
       _id: id,
     });
 
+    logger.error("file review & passed successfully.");
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -206,6 +229,8 @@ const ReviewPdfFile = async (req, res: Response) => {
       data: updatedData,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -224,6 +249,7 @@ const ReviewFail = async (req, res: Response) => {
     }).populate("owner");
 
     if (!fileData) {
+      logger.error(`File not found`);
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -234,6 +260,10 @@ const ReviewFail = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.is_shared !== true) {
+      logger.error(
+        `This file is not a shared file. Please contact ${file.owner.fullname} for permission`
+      );
+
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -243,6 +273,9 @@ const ReviewFail = async (req, res: Response) => {
     }
 
     if (file.is_signed !== true) {
+      logger.error(
+        `this file is not signed. Please contact ${file.owner.fullname} for permission`
+      );
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -270,6 +303,8 @@ const ReviewFail = async (req, res: Response) => {
       _id: id,
     });
 
+    logger.error("file review failed.");
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -277,6 +312,8 @@ const ReviewFail = async (req, res: Response) => {
       data: updatedData,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -299,6 +336,9 @@ const DeletePdfFile = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.owner._id !== user._id) {
+      logger.error(
+        `you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`
+      );
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -307,6 +347,7 @@ const DeletePdfFile = async (req, res: Response) => {
     }
 
     if (!fileData) {
+      logger.error(`File not found`);
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -333,6 +374,8 @@ const DeletePdfFile = async (req, res: Response) => {
       requestData
     );
 
+    logger.error("File Deleted Successfully");
+
     res.status(200).json({
       type: "success",
       status: 200,
@@ -340,6 +383,8 @@ const DeletePdfFile = async (req, res: Response) => {
       data: "",
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -419,6 +464,8 @@ const ListPdfFiles = async (req, res: Response) => {
     // const result_count = await PdfSchema.find(cond).count();
     // const totalPages = Math.ceil(result_count / limit);
 
+    logger.error("File Fetch Successfully");
+
     return res.status(200).json({
       status: 200,
       type: "success",
@@ -430,6 +477,8 @@ const ListPdfFiles = async (req, res: Response) => {
       data: result[0].data,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -447,6 +496,8 @@ const GetPdfFileById = async (req, res: Response) => {
       isdeleted: false,
     }).populate("owner");
 
+    logger.error("File Fetched Successfully");
+
     return res.status(200).json({
       status: 200,
       type: "success",
@@ -454,6 +505,8 @@ const GetPdfFileById = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -471,6 +524,8 @@ const FileGetById = async (req, res: Response) => {
       isdeleted: false,
     }).populate("owner");
 
+    logger.error(`File Fetched Successfully`);
+
     return res.status(200).json({
       status: 200,
       type: "success",
@@ -478,6 +533,8 @@ const FileGetById = async (req, res: Response) => {
       data: result,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -497,6 +554,10 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(result));
 
     if (result.is_editable !== true) {
+      logger.error(
+        `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`
+      );
+
       return res.status(400).json({
         status: 400,
         type: "error",
@@ -505,6 +566,8 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
         // data: result,
       });
     }
+
+    logger.error(`File is Editable`);
     return res.status(200).json({
       status: 200,
       type: "success",
@@ -513,6 +576,8 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
       // data: result,
     });
   } catch (error) {
+    logger.error(error.message);
+
     return res.status(404).json({
       type: "error",
       status: 404,
