@@ -4,7 +4,6 @@ import methodOverride from "method-override";
 import { config } from "dotenv";
 import getConnection from "./config/connection";
 import Router from "./routes/index";
-import path from "path";
 
 config();
 

@@ -4,11 +4,12 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc & node db_clearScript.ts & exit 1",
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
     "lint": "eslint . --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clear": "node db_clearScript.ts"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +34,7 @@
     "joi": "^17.6.3",
     "jsonwebtoken": "^8.5.1",
     "method-override": "^3.0.0",
+    "mongodb": "^4.9.1",
     "mongoose": "^6.6.5",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.8.0",
