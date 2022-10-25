@@ -1,5 +1,4 @@
 import { createLogger, transports, format } from "winston";
-// import { createWriteStream } from "fs";
 
 const logger = createLogger({
   transports: [

@@ -1,5 +1,6 @@
 // import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
+// import logger from "../logger";
 
 const getConnection = async (req, res, next) => {
   if (!process.env.DATABASE_URI) {

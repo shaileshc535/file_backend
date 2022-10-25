@@ -30,11 +30,14 @@ const connection = async () => {
     await db.dropCollection("file_shares", (err, result) => {
       if (err) {
         console.log(err);
+        process.exit(0);
       }
       if (result) {
         console.log(result);
+        process.exit(0);
       }
     });
+    // process.exit(0);
   };
 
   pdfScema();
