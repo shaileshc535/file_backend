@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "build": "tsc & node db_clearScript.ts & exit 1",
-    "start": "node dist/app.js",
+    "build": "tsc && node db_clearScript.ts",
+    "start": "node dist/src/app.js",
     "dev": "nodemon src/app.ts",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1",
