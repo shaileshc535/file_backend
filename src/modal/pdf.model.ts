@@ -14,6 +14,14 @@ export interface IPdf {
   deleted_at: Date;
   updated_at: Date;
   fileConsumers: Array<string>;
+  is_shared: boolean;
+  is_signed: boolean;
+  is_reviewd: boolean;
+  is_passed: boolean;
+  review_date: Date;
+  pass_date: Date;
+  fail_date: Date;
+  review_fail_reason: string;
 }
 
 const pdfSchema = new Schema<IPdf>(
@@ -36,6 +44,14 @@ const pdfSchema = new Schema<IPdf>(
         default: null,
       },
     ],
+    is_shared: { type: Boolean, default: false },
+    is_signed: { type: Boolean, default: false },
+    is_reviewd: { type: Boolean, default: false },
+    is_passed: { type: Boolean, default: false },
+    review_date: { type: Date },
+    pass_date: { type: Date },
+    fail_date: { type: Date },
+    review_fail_reason: { type: String },
   },
   { timestamps: true, toJSON: { virtuals: true } }
 );

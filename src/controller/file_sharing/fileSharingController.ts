@@ -37,6 +37,13 @@ const ShareFile = async (req, res: Response) => {
           });
         }
 
+        await PdfSchema.findByIdAndUpdate(
+          {
+            _id: requestedData.fileId,
+          },
+          { is_shared: true }
+        );
+
         const newSharedFile = new SharedFileSchema({
           senderId: user._id,
           receiverId: requestedData.userId,

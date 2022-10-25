@@ -90,12 +90,29 @@ const UpdatePdfFile = async (req, res: Response) => {
       });
     }
 
+    // console.log("fileData", fileData.docname);
+
+    const getFirstPart = (str) => {
+      return str.split(".")[0];
+    };
+
+    const getSecondPart = (str) => {
+      return str.split(".")[1];
+    };
+
+    const firstChar = getFirstPart(fileData.docname);
+    const secoundChar = getSecondPart(fileData.docname);
+
+    const finalVal = firstChar + "_signed" + "." + secoundChar;
+
     const requestData = {
       file_url: file_url,
-      docname: req.body.docname,
+      docname: finalVal,
       filesize: req.file.size,
       isupdated: true,
       updated_at: Date.now(),
+      is_signed: true,
+      is_editable: false,
     };
 
     await PdfSchema.findByIdAndUpdate(
@@ -114,6 +131,149 @@ const UpdatePdfFile = async (req, res: Response) => {
       type: "success",
       status: 200,
       message: "File Uploaded successfully",
+      data: updatedData,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const ReviewPdfFile = async (req, res: Response) => {
+  try {
+    const id = req.body.fileId;
+
+    const user = JSON.parse(JSON.stringify(req.user));
+
+    const fileData = await PdfSchema.findOne({
+      _id: id,
+      isdeleted: false,
+    }).populate("owner");
+
+    if (!fileData) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "File not found",
+      });
+    }
+
+    const file = JSON.parse(JSON.stringify(fileData));
+
+    if (file.is_shared !== true) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
+        data: "",
+      });
+    }
+
+    if (file.is_signed !== true) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
+        data: "",
+      });
+    }
+
+    const requestData = {
+      is_reviewd: true,
+      is_passed: true,
+      review_date: Date.now(),
+      pass_date: Date.now(),
+    };
+
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      requestData
+    );
+
+    const updatedData = await PdfSchema.findOne({
+      _id: id,
+    });
+
+    res.status(200).json({
+      type: "success",
+      status: 200,
+      message: "file review & passed successfully.",
+      data: updatedData,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const ReviewFail = async (req, res: Response) => {
+  try {
+    const id = req.body.fileId;
+
+    const fileData = await PdfSchema.findOne({
+      _id: id,
+      isdeleted: false,
+    }).populate("owner");
+
+    if (!fileData) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "File not found",
+      });
+    }
+
+    const file = JSON.parse(JSON.stringify(fileData));
+
+    if (file.is_shared !== true) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
+        data: "",
+      });
+    }
+
+    if (file.is_signed !== true) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
+        data: "",
+      });
+    }
+
+    const requestData = {
+      is_reviewd: true,
+      is_passed: false,
+      review_fail_reason: req.body.fail_reason,
+      review_date: Date.now(),
+      fail_date: Date.now(),
+    };
+
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      requestData
+    );
+
+    const updatedData = await PdfSchema.findOne({
+      _id: id,
+    });
+
+    res.status(200).json({
+      type: "success",
+      status: 200,
+      message: "file review failed.",
       data: updatedData,
     });
   } catch (error) {
@@ -340,6 +500,8 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
 export default {
   AddNewPdf,
   UpdatePdfFile,
+  ReviewPdfFile,
+  ReviewFail,
   DeletePdfFile,
   ListPdfFiles,
   GetPdfFileById,
