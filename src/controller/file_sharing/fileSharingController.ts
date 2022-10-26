@@ -405,7 +405,7 @@ const ListReceivedFile = async (req, res: Response) => {
         receiverId: user._id,
         access: true,
         isdeleted: false,
-        is_signed: false,
+        IsSigned: false,
         ...cond,
       };
     }

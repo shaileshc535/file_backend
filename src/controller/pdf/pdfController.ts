@@ -208,12 +208,24 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
       requestData
     );
 
+    const reqData = {
+      IsSigned: true,
+      signTime: Date.now(),
+    };
+
+    await SharedFileSchema.findByIdAndUpdate(
+      {
+        _id: req.body.docFileId,
+      },
+      reqData
+    );
+
     const updatedData = await PdfSchema.findOne({
       _id: fileId,
       isdeleted: false,
     });
 
-    logger.error({
+    logger.info({
       type: "success",
       status: 200,
       message: "File Uploaded successfully",

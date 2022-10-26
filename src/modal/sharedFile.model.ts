@@ -7,12 +7,17 @@ export interface ISHAREDFILE {
   senderId?: PopulatedDoc<IUser>;
   fileId?: PopulatedDoc<IPdf>;
   access: boolean;
-  IsSigned: boolean;
   isdeleted: boolean;
   file_is_open: boolean;
   deleted_at: Date;
   file_open_at: Date;
   comment: string;
+  IsSigned: boolean;
+  isReviewd: boolean;
+  isPassed: boolean;
+  signTime: Date;
+  reviewTime: Date;
+  reviewPassTime: Date;
 }
 
 const fileShareSchema = new mongoose.Schema<ISHAREDFILE>(
@@ -30,11 +35,16 @@ const fileShareSchema = new mongoose.Schema<ISHAREDFILE>(
     },
     comment: { type: String },
     access: { type: Boolean, default: true },
-    IsSigned: { type: Boolean, default: true },
     file_is_open: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     file_open_at: { type: Date, default: null },
     deleted_at: { type: Date, default: null },
+    IsSigned: { type: Boolean, default: false },
+    isReviewd: { type: Boolean, default: false },
+    isPassed: { type: Boolean, default: false },
+    signTime: { type: Date },
+    reviewTime: { type: Date },
+    reviewPassTime: { type: Date },
   },
   {
     timestamps: true,
