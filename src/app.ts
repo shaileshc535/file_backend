@@ -1,4 +1,4 @@
-import compression from "compression";
+// import compression from "compression";
 import express from "express";
 import cors from "cors";
 import methodOverride from "method-override";
@@ -13,11 +13,10 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(Logger());
 app.use(cors());
 // Enable pre-flight
-app.options("*", cors());
-app.use(compression());
+// app.options("*", cors());
+// app.use(compression());
 app.use(methodOverride("X-HTTP-Method-Override"));
 
 //DATABASE CONNECTION
