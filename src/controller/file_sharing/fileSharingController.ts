@@ -492,6 +492,467 @@ const ListReceivedFile = async (req, res: Response) => {
   }
 };
 
+const ListSignedPdfFiles = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+    let { page, limit, sort, cond, paginate } = req.body;
+
+    if (user) {
+      cond = {
+        senderId: user._id,
+        access: true,
+        isdeleted: false,
+        IsSigned: true,
+        ...cond,
+      };
+    }
+
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
+    }
+    if (!limit) {
+      limit = 10;
+    }
+    if (!cond) {
+      cond = {};
+    }
+    if (!sort) {
+      sort = { createdAt: -1 };
+    }
+
+    limit = parseInt(limit);
+
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const result_count = await SharedFileSchema.find(cond).count();
+
+      if (result_count == 0) {
+        logger.info({
+          type: "success",
+          status: 200,
+          message: "Signed Files not found.",
+          data: result,
+        });
+
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Signed Files not found.",
+          data: result,
+        });
+      }
+
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Signed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Signed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Signed Files list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Signed Files list fetched successfully",
+        data: result,
+      });
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const ListReviewedPdfFiles = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+    let { page, limit, sort, cond, paginate } = req.body;
+
+    if (user) {
+      cond = {
+        senderId: user._id,
+        access: true,
+        isdeleted: false,
+        IsSigned: true,
+        isReviewd: true,
+        ...cond,
+      };
+    }
+
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
+    }
+    if (!limit) {
+      limit = 10;
+    }
+    if (!cond) {
+      cond = {};
+    }
+    if (!sort) {
+      sort = { createdAt: -1 };
+    }
+
+    limit = parseInt(limit);
+
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const result_count = await SharedFileSchema.find(cond).count();
+
+      if (result_count == 0) {
+        logger.info({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+      }
+
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const ListReviewedFailPdfFiles = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+    let { page, limit, sort, cond, paginate } = req.body;
+
+    if (user) {
+      cond = {
+        senderId: user._id,
+        access: true,
+        isdeleted: false,
+        IsSigned: true,
+        isReviewd: true,
+        isPassed: false,
+        ...cond,
+      };
+    }
+
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
+    }
+    if (!limit) {
+      limit = 10;
+    }
+    if (!cond) {
+      cond = {};
+    }
+    if (!sort) {
+      sort = { createdAt: -1 };
+    }
+
+    limit = parseInt(limit);
+
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const result_count = await SharedFileSchema.find(cond).count();
+
+      if (result_count == 0) {
+        logger.info({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+      }
+
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const ListReviewedPassPdfFiles = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+    let { page, limit, sort, cond, paginate } = req.body;
+
+    if (user) {
+      cond = {
+        senderId: user._id,
+        access: true,
+        isdeleted: false,
+        IsSigned: true,
+        isReviewd: true,
+        isPassed: true,
+        ...cond,
+      };
+    }
+
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
+    }
+    if (!limit) {
+      limit = 10;
+    }
+    if (!cond) {
+      cond = {};
+    }
+    if (!sort) {
+      sort = { createdAt: -1 };
+    }
+
+    limit = parseInt(limit);
+
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const result_count = await SharedFileSchema.find(cond).count();
+
+      if (result_count == 0) {
+        logger.info({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: result,
+        });
+      }
+
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
 const getByFileId = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
@@ -670,4 +1131,8 @@ export default {
   SendFileById,
   ReceivedFileById,
   getByFileId,
+  ListSignedPdfFiles,
+  ListReviewedPdfFiles,
+  ListReviewedFailPdfFiles,
+  ListReviewedPassPdfFiles,
 };
