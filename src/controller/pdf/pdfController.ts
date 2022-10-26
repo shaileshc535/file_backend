@@ -252,13 +252,25 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
 const ReviewPdfFile = async (req, res: Response) => {
   try {
     const id = req.body.fileId;
+    const { isReviewd, fail_reason } = req.body;
 
     const user = JSON.parse(JSON.stringify(req.user));
 
-    const fileData = await PdfSchema.findOne({
+    if (isReviewd == undefined) {
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "File review is required.",
+      });
+    }
+
+    const fileData = await SharedFileSchema.findOne({
       _id: id,
       isdeleted: false,
-    }).populate("owner");
+    })
+      .populate("senderId")
+      .populate("receiverId")
+      .populate("fileId");
 
     if (!fileData) {
       return res.status(400).json({
@@ -270,138 +282,60 @@ const ReviewPdfFile = async (req, res: Response) => {
 
     const file = JSON.parse(JSON.stringify(fileData));
 
-    if (file.is_shared !== true) {
+    if (file.senderId._id !== user._id) {
       logger.error(
-        `This file is not a shared file. Please contact ${file.owner.fullname} for permission`
+        `You are not authorised to review thid file. Please contact ${file.senderId.fullname} for permission`
       );
 
       return res.status(400).json({
         type: "error",
         status: 400,
-        message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
+        message: `You are not authorised to review thid file. Please contact ${file.senderId.fullname} for permission`,
         data: "",
       });
     }
 
-    if (file.is_signed !== true) {
-      logger.error(
-        `this file is not signed. Please contact ${file.owner.fullname} for permission`
-      );
-      return res.status(400).json({
-        type: "error",
-        status: 400,
-        message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
-        data: "",
-      });
+    let requestData = {};
+
+    if (isReviewd == true) {
+      requestData = {
+        isReviewd: true,
+        isPassed: true,
+        reviewTime: Date.now(),
+        reviewPassTime: Date.now(),
+      };
+    } else if (isReviewd == false) {
+      requestData = {
+        isReviewd: true,
+        isPassed: false,
+        reviewFailReason: fail_reason,
+        reviewTime: Date.now(),
+        reviewFailTime: Date.now(),
+      };
     }
 
-    const requestData = {
-      is_reviewd: true,
-      is_passed: true,
-      review_date: Date.now(),
-      pass_date: Date.now(),
-    };
-
-    await PdfSchema.findByIdAndUpdate(
+    await SharedFileSchema.findByIdAndUpdate(
       {
         _id: id,
       },
       requestData
     );
 
-    const updatedData = await PdfSchema.findOne({
+    const updatedData = await SharedFileSchema.findOne({
       _id: id,
     });
 
-    logger.error("file review & passed successfully.");
-
-    res.status(200).json({
+    logger.info({
       type: "success",
       status: 200,
       message: "file review & passed successfully.",
       data: updatedData,
     });
-  } catch (error) {
-    logger.error(error.message);
-
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const ReviewFail = async (req, res: Response) => {
-  try {
-    const id = req.body.fileId;
-
-    const fileData = await PdfSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    }).populate("owner");
-
-    if (!fileData) {
-      logger.error(`File not found`);
-      return res.status(400).json({
-        type: "error",
-        status: 400,
-        message: "File not found",
-      });
-    }
-
-    const file = JSON.parse(JSON.stringify(fileData));
-
-    if (file.is_shared !== true) {
-      logger.error(
-        `This file is not a shared file. Please contact ${file.owner.fullname} for permission`
-      );
-
-      return res.status(400).json({
-        type: "error",
-        status: 400,
-        message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
-        data: "",
-      });
-    }
-
-    if (file.is_signed !== true) {
-      logger.error(
-        `this file is not signed. Please contact ${file.owner.fullname} for permission`
-      );
-      return res.status(400).json({
-        type: "error",
-        status: 400,
-        message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
-        data: "",
-      });
-    }
-
-    const requestData = {
-      is_reviewd: true,
-      is_passed: false,
-      review_fail_reason: req.body.fail_reason,
-      review_date: Date.now(),
-      fail_date: Date.now(),
-    };
-
-    await PdfSchema.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      requestData
-    );
-
-    const updatedData = await PdfSchema.findOne({
-      _id: id,
-    });
-
-    logger.error("file review failed.");
 
     res.status(200).json({
       type: "success",
       status: 200,
-      message: "file review failed.",
+      message: "file review & passed successfully.",
       data: updatedData,
     });
   } catch (error) {
@@ -702,7 +636,6 @@ export default {
   UpdatePdfFile,
   UpdateSignedPdfFile,
   ReviewPdfFile,
-  ReviewFail,
   DeletePdfFile,
   ListPdfFiles,
   GetPdfFileById,

@@ -18,6 +18,8 @@ export interface ISHAREDFILE {
   signTime: Date;
   reviewTime: Date;
   reviewPassTime: Date;
+  reviewFailTime: Date;
+  reviewFailReason: string;
 }
 
 const fileShareSchema = new mongoose.Schema<ISHAREDFILE>(
@@ -45,6 +47,8 @@ const fileShareSchema = new mongoose.Schema<ISHAREDFILE>(
     signTime: { type: Date },
     reviewTime: { type: Date },
     reviewPassTime: { type: Date },
+    reviewFailTime: { type: Date },
+    reviewFailReason: { type: String },
   },
   {
     timestamps: true,

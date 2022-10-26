@@ -1121,6 +1121,42 @@ const SendFileById = async (req, res: Response) => {
   }
 };
 
+const FilesGetById = async (req, res: Response) => {
+  try {
+    const { fileId } = req.params;
+
+    const result = await SharedFileSchema.find({
+      _id: fileId,
+      isdeleted: false,
+    })
+      .populate("senderId")
+      .populate("receiverId")
+      .populate("fileId");
+
+    logger.info({
+      status: 200,
+      type: "success",
+      message: "File Fetched Successfully",
+      data: result,
+    });
+
+    return res.status(200).json({
+      status: 200,
+      type: "success",
+      message: "File Fetched Successfully",
+      data: result,
+    });
+  } catch (error) {
+    logger.error(error.message);
+
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
 export default {
   ShareFile,
   GrandAccess,
@@ -1135,4 +1171,5 @@ export default {
   ListReviewedPdfFiles,
   ListReviewedFailPdfFiles,
   ListReviewedPassPdfFiles,
+  FilesGetById,
 };
