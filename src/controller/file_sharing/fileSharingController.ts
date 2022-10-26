@@ -401,7 +401,13 @@ const ListReceivedFile = async (req, res: Response) => {
     let { page, limit, sort, cond, paginate } = req.body;
 
     if (user) {
-      cond = { receiverId: user._id, access: true, isdeleted: false, ...cond };
+      cond = {
+        receiverId: user._id,
+        access: true,
+        isdeleted: false,
+        is_signed: false,
+        ...cond,
+      };
     }
 
     if (!page || page < 1) {

@@ -100,7 +100,83 @@ const UpdatePdfFile = async (req, res: Response) => {
       });
     }
 
-    // console.log("fileData", fileData.docname);
+    const requestData = {
+      file_url: file_url,
+      docname: req.docname,
+      filesize: req.file.size,
+      isupdated: true,
+      updated_at: Date.now(),
+      is_signed: false,
+      is_editable: true,
+    };
+
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: fileId,
+      },
+      requestData
+    );
+
+    const updatedData = await PdfSchema.findOne({
+      _id: fileId,
+      isdeleted: false,
+    });
+
+    logger.error("File Uploaded successfully.");
+
+    res.status(200).json({
+      type: "success",
+      status: 200,
+      message: "File Uploaded successfully",
+      data: updatedData,
+    });
+  } catch (error) {
+    logger.error(error.message);
+
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
+const UpdateSignedPdfFile = async (req, res: Response) => {
+  try {
+    if (!req.file) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "Please upload a file First",
+      });
+
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "Please upload a file First",
+      });
+    }
+
+    const { fileId } = req.body;
+
+    const base_url = process.env.BASE_URL;
+
+    const file_url = base_url + "/public/pdf/" + req.file.filename;
+
+    const fileData = await PdfSchema.findOne({
+      _id: fileId,
+      isdeleted: false,
+    }).populate("owner");
+
+    if (!fileData) {
+      logger.error("File not found");
+
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "File not found",
+      });
+    }
 
     const getFirstPart = (str) => {
       return str.split(".")[0];
@@ -122,7 +198,7 @@ const UpdatePdfFile = async (req, res: Response) => {
       isupdated: true,
       updated_at: Date.now(),
       is_signed: true,
-      is_editable: false,
+      is_editable: true,
     };
 
     await PdfSchema.findByIdAndUpdate(
@@ -137,7 +213,12 @@ const UpdatePdfFile = async (req, res: Response) => {
       isdeleted: false,
     });
 
-    logger.error("File Uploaded successfully.");
+    logger.error({
+      type: "success",
+      status: 200,
+      message: "File Uploaded successfully",
+      data: updatedData,
+    });
 
     res.status(200).json({
       type: "success",
@@ -607,6 +688,7 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
 export default {
   AddNewPdf,
   UpdatePdfFile,
+  UpdateSignedPdfFile,
   ReviewPdfFile,
   ReviewFail,
   DeletePdfFile,
