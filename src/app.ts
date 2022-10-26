@@ -1,4 +1,3 @@
-// import compression from "compression";
 import express from "express";
 import cors from "cors";
 import methodOverride from "method-override";
@@ -6,17 +5,14 @@ import { config } from "dotenv";
 import getConnection from "./config/connection";
 import Router from "./routes/index";
 import logger from "./logger";
+// import path from "path";
 
 config();
 
 const app = express();
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-// Enable pre-flight
-// app.options("*", cors());
-// app.use(compression());
 app.use(methodOverride("X-HTTP-Method-Override"));
 
 //DATABASE CONNECTION
