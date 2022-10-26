@@ -21,6 +21,11 @@ const forgotPassword = async (
     const { error } = schema.validate(req.body);
 
     if (error) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: error.details[0].message,
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -31,6 +36,11 @@ const forgotPassword = async (
     const user = await User.findOne({ email: email });
 
     if (!user) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "user with given email doesn't exist",
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -69,6 +79,12 @@ const forgotPassword = async (
       tempPass
     );
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Temp Password",
+      Password_Reset_Link: tempPass,
+    });
     res.status(200).json({
       type: "success",
       status: 200,
@@ -76,6 +92,7 @@ const forgotPassword = async (
       Password_Reset_Link: tempPass,
     });
   } catch (err) {
+    logger.error(err.message);
     res.status(404).json({
       type: "error",
       status: 404,
@@ -102,19 +119,29 @@ const resetPassword = async (
 
     const { error } = schema.validate(req.body);
     if (error)
-      return res.status(400).send({
+      logger.error({
         type: "error",
         status: 400,
         message: error.details[0].message,
       });
+    return res.status(400).send({
+      type: "error",
+      status: 400,
+      message: error.details[0].message,
+    });
 
     const user = await User.findById(req.params.userId);
     if (!user)
-      return res.status(400).send({
+      logger.error({
         type: "error",
         status: 400,
         message: "Invalid Link or expired",
       });
+    return res.status(400).send({
+      type: "error",
+      status: 400,
+      message: "Invalid Link or expired",
+    });
 
     const token = await Token.findOne({
       userId: user._id,
@@ -122,13 +149,24 @@ const resetPassword = async (
     });
 
     if (!token)
-      return res.status(400).send({
+      logger.error({
         type: "error",
         status: 400,
         message: "Invalid Link or expired",
       });
+    return res.status(400).send({
+      type: "error",
+      status: 400,
+      message: "Invalid Link or expired",
+    });
 
     if (!pass_rgex.test(password)) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message:
+          "Password must have minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -137,6 +175,11 @@ const resetPassword = async (
       });
     }
     if (password !== confirmPassword) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "Password didn't Match",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -148,12 +191,19 @@ const resetPassword = async (
     await user.save({ validateBeforeSave: false });
     await token.delete();
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Password Changed!",
+    });
+
     return res.status(200).json({
       type: "success",
       status: 200,
       message: "Password Changed!",
     });
   } catch (err) {
+    logger.error(err.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -178,6 +228,11 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
 
     const { error } = schema.validate(req.body);
     if (error) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: error.details[0].message,
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -188,6 +243,11 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
     const passwordIsValid = bcrypt.compareSync(currentPassword, user.password);
 
     if (!passwordIsValid) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "Invalid Current Password!",
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -196,6 +256,12 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
     }
 
     if (!pass_rgex.test(newPassword)) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message:
+          "Password must have minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -204,6 +270,11 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
       });
     }
     if (newPassword !== confirmNewPassword) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "New Password and Confirm Password Is not same",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -214,6 +285,12 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Password changed successful",
+      data: user,
+    });
     return res.status(200).json({
       type: "success",
       status: 200,
@@ -221,6 +298,7 @@ const changePassword = async (req, res: Response, next: NextFunction) => {
       data: user,
     });
   } catch (error) {
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -240,6 +318,11 @@ const changeTempPassword = async (req, res) => {
     const user = await User.findOne({ email: email });
 
     if (!user) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "user with given email doesn't exist",
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -249,6 +332,11 @@ const changeTempPassword = async (req, res) => {
 
     const passwordIsValid = bcrypt.compareSync(tmp_password, user.password);
     if (!passwordIsValid) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "Invalid Current Password!",
+      });
       return res.status(400).send({
         type: "error",
         status: 400,
@@ -257,6 +345,12 @@ const changeTempPassword = async (req, res) => {
     }
 
     if (!pass_rgex.test(new_password)) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message:
+          "Password must have minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -265,6 +359,11 @@ const changeTempPassword = async (req, res) => {
       });
     }
     if (new_password !== confirm_password) {
+      logger.error({
+        type: "error",
+        status: 400,
+        message: "New Password and Confirm Password Is not same",
+      });
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -275,6 +374,13 @@ const changeTempPassword = async (req, res) => {
     user.password = new_password;
     await user.save({ validateBeforeSave: false });
 
+    logger.info({
+      type: "success",
+      status: 200,
+      message: "Password changed successful",
+      data: user,
+    });
+
     return res.status(200).json({
       type: "success",
       status: 200,
@@ -282,6 +388,7 @@ const changeTempPassword = async (req, res) => {
       data: user,
     });
   } catch (err) {
+    logger.error(err.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -322,6 +429,16 @@ const ListAllUsers = async (req, res: Response) => {
     const result_count = await User.find(cond).count();
     const totalPages = Math.ceil(result_count / limit);
 
+    logger.info({
+      status: 200,
+      type: "success",
+      message: "Users Fetch Successfully",
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      total: result_count,
+      data: result,
+    });
     return res.status(200).json({
       status: 200,
       type: "success",
