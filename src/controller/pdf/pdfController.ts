@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import PdfSchema from "../../modal/pdf.model";
-import SharedFileSchema from "../../modal/sharedFile.model";
 import { Response } from "express";
 import mongoose from "mongoose";
+import PdfSchema from "../../modal/pdf.model";
+import SharedFileSchema from "../../modal/sharedFile.model";
 import logger from "../../logger";
 
 const ObjectId = <any>mongoose.Types.ObjectId;
@@ -396,10 +396,13 @@ const DeletePdfFile = async (req, res: Response) => {
 const ListPdfFiles = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond } = req.body;
+    let { page, limit, sort, cond, paginate } = req.body;
 
     let search = "";
 
+    if (paginate == undefined) {
+      paginate = true;
+    }
     if (!page || page < 1) {
       page = 1;
     }
@@ -448,37 +451,52 @@ const ListPdfFiles = async (req, res: Response) => {
 
     limit = parseInt(limit);
 
-    // const result = await PdfSchema.find(cond)
-    //   .populate("owner")
-    //   .sort(sort)
-    //   .skip((page - 1) * limit)
-    //   .limit(limit);
-
     const result = await PdfSchema.aggregate(cond);
 
-    let totalPages = 0;
-    if (result[0].total.length != 0) {
-      totalPages = Math.ceil(result[0].total[0].count / limit);
+    if (paginate !== false) {
+      let totalPages = 0;
+      if (result[0].total.length != 0) {
+        totalPages = Math.ceil(result[0].total[0].count / limit);
+      }
+
+      logger.info({
+        status: 200,
+        type: "success",
+        message: "Files Fetch Successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result[0].total.length != 0 ? result[0].total[0].count : 0,
+        data: result[0].data,
+      });
+
+      return res.status(200).json({
+        status: 200,
+        type: "success",
+        message: "Files Fetch Successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result[0].total.length != 0 ? result[0].total[0].count : 0,
+        data: result[0].data,
+      });
+    } else {
+      logger.info({
+        status: 200,
+        type: "success",
+        message: "Files Fetch Successfully",
+        data: result[0].data,
+      });
+
+      return res.status(200).json({
+        status: 200,
+        type: "success",
+        message: "Files Fetch Successfully",
+        data: result[0].data,
+      });
     }
-
-    // const result_count = await PdfSchema.find(cond).count();
-    // const totalPages = Math.ceil(result_count / limit);
-
-    logger.error("File Fetch Successfully");
-
-    return res.status(200).json({
-      status: 200,
-      type: "success",
-      message: "Files Fetch Successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result[0].total.length != 0 ? result[0].total[0].count : 0,
-      data: result[0].data,
-    });
   } catch (error) {
     logger.error(error.message);
-
     return res.status(404).json({
       type: "error",
       status: 404,

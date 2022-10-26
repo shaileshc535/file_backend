@@ -308,12 +308,11 @@ const DeleteSharedFile = async (req, res: Response) => {
 const ListSenderFile = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond } = req.body;
+    let { page, limit, sort, cond, paginate } = req.body;
 
     if (user) {
       cond = { senderId: user._id, access: true, isdeleted: false, ...cond };
     }
-
     if (!page || page < 1) {
       page = 1;
     }
@@ -326,41 +325,66 @@ const ListSenderFile = async (req, res: Response) => {
     if (!sort) {
       sort = { createdAt: -1 };
     }
+    if (paginate == undefined) {
+      paginate = true;
+    }
 
     limit = parseInt(limit);
 
-    const result = await SharedFileSchema.find(cond)
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId")
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit);
+    if (paginate == false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
 
-    const result_count = await SharedFileSchema.find(cond).count();
-    const totalPages = Math.ceil(result_count / limit);
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
 
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "Shared File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
-      data: result,
-    });
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
+    } else if (paginate == true) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "Shared File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
-      data: result,
-    });
+      const result_count = await SharedFileSchema.find(cond).count();
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    }
   } catch (error) {
     logger.error(error.message);
     return res.status(404).json({
@@ -374,7 +398,7 @@ const ListSenderFile = async (req, res: Response) => {
 const ListReceivedFile = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond } = req.body;
+    let { page, limit, sort, cond, paginate } = req.body;
 
     if (user) {
       cond = { receiverId: user._id, access: true, isdeleted: false, ...cond };
@@ -382,6 +406,9 @@ const ListReceivedFile = async (req, res: Response) => {
 
     if (!page || page < 1) {
       page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
     }
     if (!limit) {
       limit = 10;
@@ -395,38 +422,153 @@ const ListReceivedFile = async (req, res: Response) => {
 
     limit = parseInt(limit);
 
-    const result = await SharedFileSchema.find(cond)
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId")
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit);
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-    const result_count = await SharedFileSchema.find(cond).count();
-    const totalPages = Math.ceil(result_count / limit);
+      const result_count = await SharedFileSchema.find(cond).count();
+      const totalPages = Math.ceil(result_count / limit);
 
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "Received File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
-      data: result,
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
+    }
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
     });
+  }
+};
 
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "Received File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
-      data: result,
-    });
+const getByFileId = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+    let { page, limit, sort, cond, paginate } = req.body;
+
+    const file = req.body.file;
+
+    if (user) {
+      cond = { fileId: file, access: true, isdeleted: false, ...cond };
+    }
+
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
+    }
+    if (!limit) {
+      limit = 10;
+    }
+    if (!cond) {
+      cond = {};
+    }
+    if (!sort) {
+      sort = { createdAt: -1 };
+    }
+
+    limit = parseInt(limit);
+
+    if (paginate !== false) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const result_count = await SharedFileSchema.find(cond).count();
+      const totalPages = Math.ceil(result_count / limit);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        page: page,
+        limit: limit,
+        totalPages: totalPages,
+        total: result_count,
+        data: result,
+      });
+    } else {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Shared File list fetched successfully",
+        data: result,
+      });
+    }
   } catch (error) {
     logger.error(error.message);
     return res.status(404).json({
@@ -500,74 +642,6 @@ const SendFileById = async (req, res: Response) => {
       type: "success",
       status: 200,
       message: "Send File details fetched successfully",
-      data: result,
-    });
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const getByFileId = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond } = req.body;
-
-    const file = req.body.file;
-
-    if (user) {
-      cond = { fileId: file, access: true, isdeleted: false, ...cond };
-    }
-
-    if (!page || page < 1) {
-      page = 1;
-    }
-    if (!limit) {
-      limit = 10;
-    }
-    if (!cond) {
-      cond = {};
-    }
-    if (!sort) {
-      sort = { createdAt: -1 };
-    }
-
-    limit = parseInt(limit);
-
-    const result = await SharedFileSchema.find(cond)
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId")
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    const result_count = await SharedFileSchema.find(cond).count();
-    const totalPages = Math.ceil(result_count / limit);
-
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
-      data: result,
-    });
-
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "File list fetched successfully",
-      page: page,
-      limit: limit,
-      totalPages: totalPages,
-      total: result_count,
       data: result,
     });
   } catch (error) {
