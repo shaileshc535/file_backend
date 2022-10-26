@@ -16,6 +16,6 @@ router.put("/grand-access/:id", auth, controller.GrandAccess);
 router.put("/revoke-access/:id", auth, controller.RevokeAccess);
 router.get("/received-file/:id", auth, controller.ReceivedFileById);
 router.get("/send-file/:id", auth, controller.SendFileById);
-router.get("/file/:id", auth, controller.FilesGetById);
+router.get("/file/:fileId", auth, controller.FilesGetById);
 
 export default router;
