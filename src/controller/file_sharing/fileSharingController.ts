@@ -503,6 +503,7 @@ const ListSignedPdfFiles = async (req, res: Response) => {
         access: true,
         isdeleted: false,
         IsSigned: true,
+        isReviewd: false,
         ...cond,
       };
     }
