@@ -105,9 +105,9 @@ const UpdatePdfFile = async (req, res: Response) => {
       docname: req.docname,
       filesize: req.file.size,
       isupdated: true,
-      updated_at: Date.now(),
       is_signed: false,
       is_editable: true,
+      updated_at: Date.now(),
     };
 
     await PdfSchema.findByIdAndUpdate(
