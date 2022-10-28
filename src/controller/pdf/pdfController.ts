@@ -296,8 +296,30 @@ const ReviewPdfFile = async (req, res: Response) => {
     }
 
     let requestData = {};
+    let fileDataVal = {};
+
+    const getFirstPart = (str) => {
+      return str.split("_")[0];
+    };
+
+    const getSecondPart = (str) => {
+      return str.split(".")[1];
+    };
+
+    const firstChar = getFirstPart(file.fileId.docname);
+    const secoundChar = getSecondPart(file.fileId.docname);
 
     if (isReviewd == true) {
+      const finalVal = firstChar + "_passed" + "." + secoundChar;
+
+      fileDataVal = {
+        docname: finalVal,
+        is_shared: true,
+        is_signed: true,
+        is_reviewd: true,
+        is_passed: true,
+      };
+
       requestData = {
         isReviewd: true,
         isPassed: true,
@@ -305,6 +327,16 @@ const ReviewPdfFile = async (req, res: Response) => {
         reviewPassTime: Date.now(),
       };
     } else if (isReviewd == false) {
+      const finalVal = firstChar + "_failed" + "." + secoundChar;
+
+      fileDataVal = {
+        docname: finalVal,
+        is_shared: true,
+        is_signed: true,
+        is_reviewd: true,
+        is_passed: false,
+      };
+
       requestData = {
         isReviewd: true,
         isPassed: false,
@@ -321,9 +353,19 @@ const ReviewPdfFile = async (req, res: Response) => {
       requestData
     );
 
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: file.fileId._id,
+      },
+      fileDataVal
+    );
+
     const updatedData = await SharedFileSchema.findOne({
       _id: id,
-    });
+    })
+      .populate("senderId")
+      .populate("receiverId")
+      .populate("fileId");
 
     logger.info({
       type: "success",
@@ -507,7 +549,7 @@ const ListPdfFiles = async (req, res: Response) => {
         total: result[0].total.length != 0 ? result[0].total[0].count : 0,
         data: result[0].data,
       });
-    } else {
+    } else if (paginate !== true) {
       logger.info({
         status: 200,
         type: "success",

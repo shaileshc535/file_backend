@@ -461,7 +461,7 @@ const ListReceivedFile = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -537,20 +537,9 @@ const ListSignedPdfFiles = async (req, res: Response) => {
 
       const result_count = await SharedFileSchema.find(cond).count();
 
-      if (result_count == 0) {
-        logger.info({
-          type: "success",
-          status: 200,
-          message: "Signed Files not found.",
-          data: result,
-        });
-
-        res.status(200).json({
-          type: "success",
-          status: 200,
-          message: "Signed Files not found.",
-          data: result,
-        });
+      if (result_count < 1) {
+        logger.error("Signed Files not found.");
+        throw new Error("Signed Files not found.");
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -576,7 +565,7 @@ const ListSignedPdfFiles = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -652,20 +641,9 @@ const ListReviewedPdfFiles = async (req, res: Response) => {
 
       const result_count = await SharedFileSchema.find(cond).count();
 
-      if (result_count == 0) {
-        logger.info({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
-
-        res.status(200).json({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
+      if (result_count < 1) {
+        logger.error("Reviewed Files not found.");
+        throw new Error("Reviewed Files not found.");
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -691,7 +669,7 @@ const ListReviewedPdfFiles = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -768,20 +746,9 @@ const ListReviewedFailPdfFiles = async (req, res: Response) => {
 
       const result_count = await SharedFileSchema.find(cond).count();
 
-      if (result_count == 0) {
-        logger.info({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
-
-        res.status(200).json({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
+      if (result_count < 1) {
+        logger.error("Reviewed Files not found.");
+        throw new Error("Reviewed Files not found.");
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -807,7 +774,7 @@ const ListReviewedFailPdfFiles = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -884,20 +851,9 @@ const ListReviewedPassPdfFiles = async (req, res: Response) => {
 
       const result_count = await SharedFileSchema.find(cond).count();
 
-      if (result_count == 0) {
-        logger.info({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
-
-        res.status(200).json({
-          type: "success",
-          status: 200,
-          message: "Reviewed Files not found.",
-          data: result,
-        });
+      if (result_count < 1) {
+        logger.error("Reviewed Files not found.");
+        throw new Error("Reviewed Files not found.");
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -923,7 +879,7 @@ const ListReviewedPassPdfFiles = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -1016,7 +972,7 @@ const getByFileId = async (req, res: Response) => {
         total: result_count,
         data: result,
       });
-    } else {
+    } else if (paginate !== true) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
