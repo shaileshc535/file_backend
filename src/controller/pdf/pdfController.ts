@@ -69,21 +69,7 @@ const AddNewPdf = async (req, res: Response) => {
 
 const UpdatePdfFile = async (req, res: Response) => {
   try {
-    if (!req.file) {
-      logger.error("Please upload a file First");
-
-      return res.status(400).json({
-        type: "error",
-        status: 400,
-        message: "Please upload a file First",
-      });
-    }
-
-    const { fileId } = req.body;
-
-    const base_url = process.env.BASE_URL;
-
-    const file_url = base_url + "/public/pdf/" + req.file.filename;
+    const { fileId, docname } = req.body;
 
     const fileData = await PdfSchema.findOne({
       _id: fileId,
@@ -92,7 +78,6 @@ const UpdatePdfFile = async (req, res: Response) => {
 
     if (!fileData) {
       logger.error("File not found");
-
       return res.status(400).json({
         type: "error",
         status: 400,
@@ -101,12 +86,8 @@ const UpdatePdfFile = async (req, res: Response) => {
     }
 
     const requestData = {
-      file_url: file_url,
-      docname: req.docname,
-      filesize: req.file.size,
+      docname: docname,
       isupdated: true,
-      is_signed: false,
-      is_editable: true,
       updated_at: Date.now(),
     };
 
@@ -122,7 +103,7 @@ const UpdatePdfFile = async (req, res: Response) => {
       isdeleted: false,
     });
 
-    logger.error("File Uploaded successfully.");
+    logger.info("File Uploaded successfully.");
 
     res.status(200).json({
       type: "success",
@@ -132,7 +113,6 @@ const UpdatePdfFile = async (req, res: Response) => {
     });
   } catch (error) {
     logger.error(error.message);
-
     return res.status(404).json({
       type: "error",
       status: 404,
