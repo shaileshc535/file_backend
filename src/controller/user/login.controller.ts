@@ -65,15 +65,15 @@ const login = async (req, res) => {
         },
       });
 
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "User Successfully Logged-In",
-        data: {
-          ...user.toObject(),
-          token: token,
-        },
-      });
+      // logger.info({
+      //   type: "success",
+      //   status: 200,
+      //   message: "User Successfully Logged-In",
+      //   data: {
+      //     ...user.toObject(),
+      //     token: token,
+      //   },
+      // });
     });
   } catch (error) {
     logger.error(error.message);

@@ -22,6 +22,7 @@ export interface IPdf {
   pass_date: Date;
   fail_date: Date;
   review_fail_reason: string;
+  sign_stamp: string;
 }
 
 const pdfSchema = new Schema<IPdf>(
@@ -29,6 +30,7 @@ const pdfSchema = new Schema<IPdf>(
     owner: { type: Schema.Types.ObjectId, ref: "user", required: true },
     filename: { type: String, required: true },
     file_url: { type: String, required: true },
+    sign_stamp: { type: String },
     docname: { type: String },
     filetype: { type: String },
     filesize: { type: String },
