@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import getConnection from "./config/connection";
 import Router from "./routes/index";
 import logger from "./logger";
-// import path from "path";
+import path from "path";
 
 config();
 
