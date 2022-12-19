@@ -29,12 +29,12 @@ const ShareFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 if (file.owner._id !== user._id) {
                     logger_1.default.error({
                         type: "error",
-                        status: 400,
+                        status: 200,
                         message: `you don’t have permission to share this file. Please contact ${file.owner.fullname} for permission`,
                     });
-                    return res.status(400).json({
+                    return res.status(200).json({
                         type: "error",
-                        status: 400,
+                        status: 200,
                         message: `you don’t have permission to share this file. Please contact ${file.owner.fullname} for permission`,
                     });
                 }
@@ -63,13 +63,13 @@ const ShareFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             else {
                 logger_1.default.error({
                     type: "success",
-                    status: 400,
+                    status: 200,
                     message: "File receiver is required",
                     data: "",
                 });
-                res.status(400).json({
+                res.status(200).json({
                     type: "success",
-                    status: 400,
+                    status: 200,
                     message: "File receiver is required",
                     data: "",
                 });
@@ -78,13 +78,13 @@ const ShareFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         else {
             logger_1.default.error({
                 type: "success",
-                status: 400,
+                status: 200,
                 message: "File is required",
                 data: "",
             });
-            res.status(400).json({
+            res.status(200).json({
                 type: "success",
-                status: 400,
+                status: 200,
                 message: "File is required",
                 data: "",
             });
@@ -115,12 +115,12 @@ const GrandAccess = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (file.senderId._id !== user._id) {
             logger_1.default.info({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
             });
-            return res.status(400).json({
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
             });
         }
@@ -170,12 +170,12 @@ const RevokeAccess = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (file.senderId._id !== user._id) {
             logger_1.default.error({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
             });
-            return res.status(400).json({
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
             });
         }
@@ -225,12 +225,12 @@ const DeleteSharedFile = (req, res) => __awaiter(void 0, void 0, void 0, functio
         if (file.senderId._id !== user._id) {
             logger_1.default.error({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
             });
-            return res.status(400).json({
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
             });
         }
@@ -351,7 +351,7 @@ const ListReceivedFile = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const user = JSON.parse(JSON.stringify(req.user));
         let { page, limit, sort, cond, paginate } = req.body;
         if (user) {
-            cond = Object.assign({ receiverId: user._id, access: true, isdeleted: false }, cond);
+            cond = Object.assign({ receiverId: user._id, access: true, isdeleted: false, IsSigned: false }, cond);
         }
         if (!page || page < 1) {
             page = 1;
@@ -400,7 +400,7 @@ const ListReceivedFile = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 data: result,
             });
         }
-        else {
+        else if (paginate !== true) {
             const result = yield sharedFile_model_1.default.find(cond)
                 .populate("senderId")
                 .populate("receiverId")
@@ -416,6 +416,374 @@ const ListReceivedFile = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 type: "success",
                 status: 200,
                 message: "Shared File list fetched successfully",
+                data: result,
+            });
+        }
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const ListSignedPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        let { page, limit, sort, cond, paginate } = req.body;
+        if (user) {
+            cond = Object.assign({ senderId: user._id, access: true, isdeleted: false, IsSigned: true, isReviewd: false }, cond);
+        }
+        if (!page || page < 1) {
+            page = 1;
+        }
+        if (paginate == undefined) {
+            paginate = true;
+        }
+        if (!limit) {
+            limit = 10;
+        }
+        if (!cond) {
+            cond = {};
+        }
+        if (!sort) {
+            sort = { createdAt: -1 };
+        }
+        limit = parseInt(limit);
+        if (paginate !== false) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort)
+                .skip((page - 1) * limit)
+                .limit(limit);
+            const result_count = yield sharedFile_model_1.default.find(cond).count();
+            // if (result_count < 1) {
+            //   logger.error("Signed Files not found.");
+            //   res.status(200).json({
+            //     type: "success",
+            //     status: 200,
+            //     message: "Signed Files not found.",
+            //     data: "",
+            //   });
+            // }
+            const totalPages = Math.ceil(result_count / limit);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Signed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Signed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+        }
+        else if (paginate !== true) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Signed Files list fetched successfully",
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Signed Files list fetched successfully",
+                data: result,
+            });
+        }
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const ListReviewedPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        let { page, limit, sort, cond, paginate } = req.body;
+        if (user) {
+            cond = Object.assign({ senderId: user._id, access: true, isdeleted: false, IsSigned: true, isReviewd: true }, cond);
+        }
+        if (!page || page < 1) {
+            page = 1;
+        }
+        if (paginate == undefined) {
+            paginate = true;
+        }
+        if (!limit) {
+            limit = 10;
+        }
+        if (!cond) {
+            cond = {};
+        }
+        if (!sort) {
+            sort = { createdAt: -1 };
+        }
+        limit = parseInt(limit);
+        if (paginate !== false) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort)
+                .skip((page - 1) * limit)
+                .limit(limit);
+            const result_count = yield sharedFile_model_1.default.find(cond).count();
+            // if (result_count < 1) {
+            //   logger.error("Reviewed Files not found.");
+            //   res.status(200).json({
+            //     type: "success",
+            //     status: 200,
+            //     message: "Reviewed Files not found.",
+            //     data: "",
+            //   });
+            // }
+            const totalPages = Math.ceil(result_count / limit);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+        }
+        else if (paginate !== true) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                data: result,
+            });
+        }
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const ListReviewedFailPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        let { page, limit, sort, cond, paginate } = req.body;
+        if (user) {
+            cond = Object.assign({ senderId: user._id, access: true, isdeleted: false, IsSigned: true, isReviewd: true, isPassed: false }, cond);
+        }
+        if (!page || page < 1) {
+            page = 1;
+        }
+        if (paginate == undefined) {
+            paginate = true;
+        }
+        if (!limit) {
+            limit = 10;
+        }
+        if (!cond) {
+            cond = {};
+        }
+        if (!sort) {
+            sort = { createdAt: -1 };
+        }
+        limit = parseInt(limit);
+        if (paginate !== false) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort)
+                .skip((page - 1) * limit)
+                .limit(limit);
+            const result_count = yield sharedFile_model_1.default.find(cond).count();
+            // if (result_count < 1) {
+            //   logger.error("Reviewed Files not found.");
+            //   res.status(200).json({
+            //     type: "success",
+            //     status: 200,
+            //     message: "Reviewed Files not found.",
+            //     data: "",
+            //   });
+            // }
+            const totalPages = Math.ceil(result_count / limit);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+        }
+        else if (paginate !== true) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                data: result,
+            });
+        }
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const ListReviewedPassPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        let { page, limit, sort, cond, paginate } = req.body;
+        if (user) {
+            cond = Object.assign({ senderId: user._id, access: true, isdeleted: false, IsSigned: true, isReviewd: true, isPassed: true }, cond);
+        }
+        if (!page || page < 1) {
+            page = 1;
+        }
+        if (paginate == undefined) {
+            paginate = true;
+        }
+        if (!limit) {
+            limit = 10;
+        }
+        if (!cond) {
+            cond = {};
+        }
+        if (!sort) {
+            sort = { createdAt: -1 };
+        }
+        limit = parseInt(limit);
+        if (paginate !== false) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort)
+                .skip((page - 1) * limit)
+                .limit(limit);
+            const result_count = yield sharedFile_model_1.default.find(cond).count();
+            // if (result_count < 1) {
+            //   logger.error("Reviewed Files not found.");
+            //   res.status(200).json({
+            //     type: "success",
+            //     status: 200,
+            //     message: "Reviewed Files not found.",
+            //     data: "",
+            //   });
+            // }
+            const totalPages = Math.ceil(result_count / limit);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                page: page,
+                limit: limit,
+                totalPages: totalPages,
+                total: result_count,
+                data: result,
+            });
+        }
+        else if (paginate !== true) {
+            const result = yield sharedFile_model_1.default.find(cond)
+                .populate("senderId")
+                .populate("receiverId")
+                .populate("fileId")
+                .sort(sort);
+            logger_1.default.info({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
+                data: result,
+            });
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Reviewed Files list fetched successfully",
                 data: result,
             });
         }
@@ -484,7 +852,7 @@ const getByFileId = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 data: result,
             });
         }
-        else {
+        else if (paginate !== true) {
             const result = yield sharedFile_model_1.default.find(cond)
                 .populate("senderId")
                 .populate("receiverId")
@@ -583,6 +951,38 @@ const SendFileById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
     }
 });
+const FilesGetById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { fileId } = req.params;
+        const result = yield sharedFile_model_1.default.find({
+            _id: fileId,
+            isdeleted: false,
+        })
+            .populate("senderId")
+            .populate("receiverId")
+            .populate("fileId");
+        logger_1.default.info({
+            status: 200,
+            type: "success",
+            message: "File Fetched Successfully",
+            data: result,
+        });
+        return res.status(200).json({
+            status: 200,
+            type: "success",
+            message: "File Fetched Successfully",
+            data: result,
+        });
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
 exports.default = {
     ShareFile,
     GrandAccess,
@@ -593,5 +993,10 @@ exports.default = {
     SendFileById,
     ReceivedFileById,
     getByFileId,
+    ListSignedPdfFiles,
+    ListReviewedPdfFiles,
+    ListReviewedFailPdfFiles,
+    ListReviewedPassPdfFiles,
+    FilesGetById,
 };
 //# sourceMappingURL=fileSharingController.js.map

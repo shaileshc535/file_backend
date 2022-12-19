@@ -70,12 +70,15 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "User Successfully Logged-In",
                 data: Object.assign(Object.assign({}, user.toObject()), { token: token }),
             });
-            logger_1.default.info({
-                type: "success",
-                status: 200,
-                message: "User Successfully Logged-In",
-                data: Object.assign(Object.assign({}, user.toObject()), { token: token }),
-            });
+            // logger.info({
+            //   type: "success",
+            //   status: 200,
+            //   message: "User Successfully Logged-In",
+            //   data: {
+            //     ...user.toObject(),
+            //     token: token,
+            //   },
+            // });
         });
     }
     catch (error) {

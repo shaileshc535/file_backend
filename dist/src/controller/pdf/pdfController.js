@@ -16,14 +16,19 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const pdf_model_1 = __importDefault(require("../../modal/pdf.model"));
 const sharedFile_model_1 = __importDefault(require("../../modal/sharedFile.model"));
 const logger_1 = __importDefault(require("../../logger"));
+const fs_1 = __importDefault(require("fs"));
+const canvas_1 = require("canvas");
+const moment_1 = __importDefault(require("moment"));
 const ObjectId = mongoose_1.default.Types.ObjectId;
 const AddNewPdf = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = JSON.parse(JSON.stringify(req.user));
         if (!req.file) {
-            logger_1.default.error("Please upload a file");
-            return res.status(400).json({
-                message: "Please upload a file",
+            res.status(200).json({
+                type: "success",
+                status: 200,
+                message: "Please upload a file.",
+                data: "",
             });
         }
         const base_url = process.env.BASE_URL;
@@ -37,7 +42,6 @@ const AddNewPdf = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             filesize: req.file.size,
         });
         yield newFile.save();
-        logger_1.default.info("File Uploaded successfully");
         res.status(200).json({
             type: "success",
             status: 200,
@@ -54,18 +58,71 @@ const AddNewPdf = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
-const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const renamePdf = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        if (!req.file) {
-            logger_1.default.error("Please upload a file First");
-            return res.status(400).json({
+        const user = JSON.parse(JSON.stringify(req.user));
+        const fileData = yield pdf_model_1.default.findOne({
+            _id: req.body.fileId,
+            isdeleted: false,
+        }).populate("owner");
+        if (!fileData) {
+            logger_1.default.error("File not found");
+            return res.status(200).json({
                 type: "error",
-                status: 400,
-                message: "Please upload a file First",
+                status: 200,
+                message: "File not found",
             });
         }
+        const requestData = {
+            docname: req.body.docname,
+            isupdated: true,
+            updated_at: Date.now(),
+        };
+        yield pdf_model_1.default.findByIdAndUpdate({
+            _id: req.body.fileId,
+        }, requestData);
+        const updatedData = yield pdf_model_1.default.findOne({
+            _id: req.body.fileId,
+            isdeleted: false,
+        });
+        res.status(200).json({
+            type: "success",
+            status: 200,
+            message: "File Name Updated successfully",
+            data: updatedData,
+        });
+    }
+    catch (error) {
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
         const { fileId } = req.body;
+        const user = JSON.parse(JSON.stringify(req.user));
+        const Time = Date.now();
+        const imageString = user._id + " : " + (0, moment_1.default)(Time).format("llll");
+        const imageName = user._id + Time;
+        const width = 800;
+        const height = 300;
+        const canvas = (0, canvas_1.createCanvas)(width, height);
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, width, height);
+        context.font = "bold 70pt";
+        context.textAlign = "center";
+        context.textBaseline = "top";
+        context.fillStyle = "#000";
+        context.font = "20pt 'PT Sans'";
+        context.fillText(imageString, 400, 200);
+        const buffer = canvas.toBuffer("image/png");
+        fs_1.default.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
         const base_url = process.env.BASE_URL;
+        const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
         const file_url = base_url + "/public/pdf/" + req.file.filename;
         const fileData = yield pdf_model_1.default.findOne({
             _id: fileId,
@@ -73,13 +130,12 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }).populate("owner");
         if (!fileData) {
             logger_1.default.error("File not found");
-            return res.status(400).json({
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: "File not found",
             });
         }
-        // console.log("fileData", fileData.docname);
         const getFirstPart = (str) => {
             return str.split(".")[0];
         };
@@ -92,11 +148,12 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const requestData = {
             file_url: file_url,
             docname: finalVal,
+            // sign_stamp: stamp_url,
             filesize: req.file.size,
             isupdated: true,
             updated_at: Date.now(),
             is_signed: true,
-            is_editable: false,
+            is_editable: true,
         };
         yield pdf_model_1.default.findByIdAndUpdate({
             _id: fileId,
@@ -105,7 +162,91 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             _id: fileId,
             isdeleted: false,
         });
-        logger_1.default.error("File Uploaded successfully.");
+        res.status(200).json({
+            type: "success",
+            status: 200,
+            message: "File Updated successfully",
+            data: updatedData,
+        });
+    }
+    catch (error) {
+        // logger.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const UpdateSignedPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        const Time = Date.now();
+        const imageString = user._id + " : " + (0, moment_1.default)(Time).format("llll");
+        const imageName = user._id + Time;
+        const width = 800;
+        const height = 300;
+        const canvas = (0, canvas_1.createCanvas)(width, height);
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, width, height);
+        context.font = "bold 70pt";
+        context.textAlign = "center";
+        context.textBaseline = "top";
+        context.fillStyle = "#000";
+        context.font = "20pt 'PT Sans'";
+        context.fillText(imageString, 400, 200);
+        const buffer = canvas.toBuffer("image/png");
+        fs_1.default.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
+        const { fileId } = req.body;
+        const base_url = process.env.BASE_URL;
+        const file_url = base_url + "/public/pdf/" + req.file.filename;
+        const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
+        console.log("stamp_url", stamp_url);
+        const fileData = yield pdf_model_1.default.findOne({
+            _id: fileId,
+            isdeleted: false,
+        }).populate("owner");
+        if (!fileData) {
+            logger_1.default.error("File not found");
+            return res.status(200).json({
+                type: "error",
+                status: 200,
+                message: "File not found",
+            });
+        }
+        const getFirstPart = (str) => {
+            return str.split(".")[0];
+        };
+        const getSecondPart = (str) => {
+            return str.split(".")[1];
+        };
+        const firstChar = getFirstPart(fileData.docname);
+        const secoundChar = getSecondPart(fileData.docname);
+        const finalVal = firstChar + "_signed" + "." + secoundChar;
+        const requestData = {
+            file_url: file_url,
+            docname: finalVal,
+            sign_stamp: stamp_url,
+            filesize: req.file.size,
+            isupdated: true,
+            updated_at: Date.now(),
+            is_signed: true,
+            is_editable: true,
+        };
+        yield pdf_model_1.default.findByIdAndUpdate({
+            _id: fileId,
+        }, requestData);
+        const updatedData = yield pdf_model_1.default.findOne({
+            _id: fileId,
+            isdeleted: false,
+        });
+        logger_1.default.info({
+            type: "success",
+            status: 200,
+            message: "File Uploaded successfully",
+            data: updatedData,
+        });
         res.status(200).json({
             type: "success",
             status: 200,
@@ -115,9 +256,9 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     catch (error) {
         logger_1.default.error(error.message);
-        return res.status(404).json({
+        return res.status(400).json({
             type: "error",
-            status: 404,
+            status: 400,
             message: error.message,
         });
     }
@@ -125,50 +266,99 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 const ReviewPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.body.fileId;
+        const { isReviewd, fail_reason } = req.body;
         const user = JSON.parse(JSON.stringify(req.user));
-        const fileData = yield pdf_model_1.default.findOne({
+        if (isReviewd == undefined) {
+            return res.status(200).json({
+                type: "error",
+                status: 200,
+                message: "File review is required.",
+            });
+        }
+        const fileData = yield sharedFile_model_1.default.findOne({
             _id: id,
             isdeleted: false,
-        }).populate("owner");
+        })
+            .populate("senderId")
+            .populate("receiverId")
+            .populate("fileId");
         if (!fileData) {
-            return res.status(400).json({
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: "File not found",
             });
         }
         const file = JSON.parse(JSON.stringify(fileData));
-        if (file.is_shared !== true) {
-            logger_1.default.error(`This file is not a shared file. Please contact ${file.owner.fullname} for permission`);
-            return res.status(400).json({
+        if (file.senderId._id !== user._id) {
+            return res.status(200).json({
                 type: "error",
-                status: 400,
-                message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
+                status: 200,
+                message: `You are not authorised to review thid file. Please contact ${file.senderId.fullname} for permission`,
                 data: "",
             });
         }
-        if (file.is_signed !== true) {
-            logger_1.default.error(`this file is not signed. Please contact ${file.owner.fullname} for permission`);
-            return res.status(400).json({
-                type: "error",
-                status: 400,
-                message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
-                data: "",
-            });
-        }
-        const requestData = {
-            is_reviewd: true,
-            is_passed: true,
-            review_date: Date.now(),
-            pass_date: Date.now(),
+        let requestData = {};
+        let fileDataVal = {};
+        const getFirstPart = (str) => {
+            return str.split("_")[0];
         };
-        yield pdf_model_1.default.findByIdAndUpdate({
+        const getSecondPart = (str) => {
+            return str.split(".")[1];
+        };
+        const firstChar = getFirstPart(file.fileId.docname);
+        const secoundChar = getSecondPart(file.fileId.docname);
+        if (isReviewd == true) {
+            const finalVal = firstChar + "_passed" + "." + secoundChar;
+            fileDataVal = {
+                docname: finalVal,
+                is_shared: true,
+                is_signed: true,
+                is_reviewd: true,
+                is_passed: true,
+            };
+            requestData = {
+                isReviewd: true,
+                isPassed: true,
+                reviewTime: Date.now(),
+                reviewPassTime: Date.now(),
+            };
+        }
+        else if (isReviewd == false) {
+            const finalVal = firstChar + "_failed" + "." + secoundChar;
+            fileDataVal = {
+                docname: finalVal,
+                is_shared: true,
+                is_signed: true,
+                is_reviewd: true,
+                is_passed: false,
+            };
+            requestData = {
+                isReviewd: true,
+                isPassed: false,
+                reviewFailReason: fail_reason,
+                reviewTime: Date.now(),
+                reviewFailTime: Date.now(),
+            };
+        }
+        yield sharedFile_model_1.default.findByIdAndUpdate({
             _id: id,
         }, requestData);
-        const updatedData = yield pdf_model_1.default.findOne({
+        yield pdf_model_1.default.findByIdAndUpdate({
+            _id: file.fileId._id,
+        }, fileDataVal);
+        const updatedData = yield sharedFile_model_1.default.findOne({
             _id: id,
-        });
-        logger_1.default.error("file review & passed successfully.");
+        })
+            .populate("senderId")
+            .populate("receiverId")
+            .populate("fileId");
+        // logger.info({
+        //   type: "success",
+        //   status: 200,
+        //   message: "file review & passed successfully.",
+        //   data: updatedData,
+        // });
         res.status(200).json({
             type: "success",
             status: 200,
@@ -177,74 +367,10 @@ const ReviewPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     catch (error) {
-        logger_1.default.error(error.message);
-        return res.status(404).json({
+        // logger.error(error.message);
+        return res.status(400).json({
             type: "error",
-            status: 404,
-            message: error.message,
-        });
-    }
-});
-const ReviewFail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const id = req.body.fileId;
-        const fileData = yield pdf_model_1.default.findOne({
-            _id: id,
-            isdeleted: false,
-        }).populate("owner");
-        if (!fileData) {
-            logger_1.default.error(`File not found`);
-            return res.status(400).json({
-                type: "error",
-                status: 400,
-                message: "File not found",
-            });
-        }
-        const file = JSON.parse(JSON.stringify(fileData));
-        if (file.is_shared !== true) {
-            logger_1.default.error(`This file is not a shared file. Please contact ${file.owner.fullname} for permission`);
-            return res.status(400).json({
-                type: "error",
-                status: 400,
-                message: `This file is not a shared file. Please contact ${file.owner.fullname} for permission`,
-                data: "",
-            });
-        }
-        if (file.is_signed !== true) {
-            logger_1.default.error(`this file is not signed. Please contact ${file.owner.fullname} for permission`);
-            return res.status(400).json({
-                type: "error",
-                status: 400,
-                message: `this file is not signed. Please contact ${file.owner.fullname} for permission`,
-                data: "",
-            });
-        }
-        const requestData = {
-            is_reviewd: true,
-            is_passed: false,
-            review_fail_reason: req.body.fail_reason,
-            review_date: Date.now(),
-            fail_date: Date.now(),
-        };
-        yield pdf_model_1.default.findByIdAndUpdate({
-            _id: id,
-        }, requestData);
-        const updatedData = yield pdf_model_1.default.findOne({
-            _id: id,
-        });
-        logger_1.default.error("file review failed.");
-        res.status(200).json({
-            type: "success",
-            status: 200,
-            message: "file review failed.",
-            data: updatedData,
-        });
-    }
-    catch (error) {
-        logger_1.default.error(error.message);
-        return res.status(404).json({
-            type: "error",
-            status: 404,
+            status: 400,
             message: error.message,
         });
     }
@@ -259,18 +385,20 @@ const DeletePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }).populate("owner");
         const file = JSON.parse(JSON.stringify(fileData));
         if (file.owner._id !== user._id) {
-            logger_1.default.error(`you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`);
-            return res.status(400).json({
+            // logger.error(
+            //   `you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`
+            // );
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: `you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`,
             });
         }
         if (!fileData) {
-            logger_1.default.error(`File not found`);
-            return res.status(400).json({
+            // logger.error(`File not found`);
+            return res.status(200).json({
                 type: "error",
-                status: 400,
+                status: 200,
                 message: "File not found",
             });
         }
@@ -284,7 +412,7 @@ const DeletePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         yield sharedFile_model_1.default.findOneAndUpdate({
             fileId: id,
         }, requestData);
-        logger_1.default.error("File Deleted Successfully");
+        // logger.error("File Deleted Successfully");
         res.status(200).json({
             type: "success",
             status: 200,
@@ -293,7 +421,7 @@ const DeletePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
     catch (error) {
-        logger_1.default.error(error.message);
+        // logger.error(error.message);
         return res.status(404).json({
             type: "error",
             status: 404,
@@ -360,16 +488,16 @@ const ListPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             if (result[0].total.length != 0) {
                 totalPages = Math.ceil(result[0].total[0].count / limit);
             }
-            logger_1.default.info({
-                status: 200,
-                type: "success",
-                message: "Files Fetch Successfully",
-                page: page,
-                limit: limit,
-                totalPages: totalPages,
-                total: result[0].total.length != 0 ? result[0].total[0].count : 0,
-                data: result[0].data,
-            });
+            // logger.info({
+            //   status: 200,
+            //   type: "success",
+            //   message: "Files Fetch Successfully",
+            //   page: page,
+            //   limit: limit,
+            //   totalPages: totalPages,
+            //   total: result[0].total.length != 0 ? result[0].total[0].count : 0,
+            //   data: result[0].data,
+            // });
             return res.status(200).json({
                 status: 200,
                 type: "success",
@@ -381,13 +509,13 @@ const ListPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 data: result[0].data,
             });
         }
-        else {
-            logger_1.default.info({
-                status: 200,
-                type: "success",
-                message: "Files Fetch Successfully",
-                data: result[0].data,
-            });
+        else if (paginate !== true) {
+            // logger.info({
+            //   status: 200,
+            //   type: "success",
+            //   message: "Files Fetch Successfully",
+            //   data: result[0].data,
+            // });
             return res.status(200).json({
                 status: 200,
                 type: "success",
@@ -397,7 +525,7 @@ const ListPdfFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
     }
     catch (error) {
-        logger_1.default.error(error.message);
+        // logger.error(error.message);
         return res.status(404).json({
             type: "error",
             status: 404,
@@ -412,7 +540,7 @@ const GetPdfFileById = (req, res) => __awaiter(void 0, void 0, void 0, function*
             _id: fileId,
             isdeleted: false,
         }).populate("owner");
-        logger_1.default.error("File Fetched Successfully");
+        // logger.error("File Fetched Successfully");
         return res.status(200).json({
             status: 200,
             type: "success",
@@ -421,7 +549,7 @@ const GetPdfFileById = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
     catch (error) {
-        logger_1.default.error(error.message);
+        // logger.error(error.message);
         return res.status(404).json({
             type: "error",
             status: 404,
@@ -436,7 +564,7 @@ const FileGetById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             _id: fileId,
             isdeleted: false,
         }).populate("owner");
-        logger_1.default.error(`File Fetched Successfully`);
+        // logger.error(`File Fetched Successfully`);
         return res.status(200).json({
             status: 200,
             type: "success",
@@ -445,7 +573,7 @@ const FileGetById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (error) {
-        logger_1.default.error(error.message);
+        // logger.error(error.message);
         return res.status(404).json({
             type: "error",
             status: 404,
@@ -461,7 +589,9 @@ const CheckPdfFileIsEditable = (req, res) => __awaiter(void 0, void 0, void 0, f
         }).populate("owner");
         const file = JSON.parse(JSON.stringify(result));
         if (result.is_editable !== true) {
-            logger_1.default.error(`${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`);
+            // logger.error(
+            //   `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`
+            // );
             return res.status(400).json({
                 status: 400,
                 type: "error",
@@ -470,7 +600,7 @@ const CheckPdfFileIsEditable = (req, res) => __awaiter(void 0, void 0, void 0, f
                 // data: result,
             });
         }
-        logger_1.default.error(`File is Editable`);
+        // logger.error(`File is Editable`);
         return res.status(200).json({
             status: 200,
             type: "success",
@@ -480,7 +610,7 @@ const CheckPdfFileIsEditable = (req, res) => __awaiter(void 0, void 0, void 0, f
         });
     }
     catch (error) {
-        logger_1.default.error(error.message);
+        // logger.error(error.message);
         return res.status(404).json({
             type: "error",
             status: 404,
@@ -490,9 +620,10 @@ const CheckPdfFileIsEditable = (req, res) => __awaiter(void 0, void 0, void 0, f
 });
 exports.default = {
     AddNewPdf,
+    renamePdf,
     UpdatePdfFile,
+    UpdateSignedPdfFile,
     ReviewPdfFile,
-    ReviewFail,
     DeletePdfFile,
     ListPdfFiles,
     GetPdfFileById,

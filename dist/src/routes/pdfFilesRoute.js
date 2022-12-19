@@ -41,9 +41,10 @@ const upload = (0, multer_1.default)({
 }).single("filename");
 const router = express_1.default.Router();
 router.post("/add-file", auth_middleware_1.default, upload, pdfController_1.default.AddNewPdf);
+router.put("/rename-file", auth_middleware_1.default, pdfController_1.default.renamePdf);
 router.put("/update-file", auth_middleware_1.default, upload, pdfController_1.default.UpdatePdfFile);
+router.put("/sign-file", auth_middleware_1.default, upload, pdfController_1.default.UpdateSignedPdfFile);
 router.put("/review-file", auth_middleware_1.default, pdfController_1.default.ReviewPdfFile);
-router.put("/review-file-fail", auth_middleware_1.default, pdfController_1.default.ReviewFail);
 router.put("/delete-file/:fileId", auth_middleware_1.default, pdfController_1.default.DeletePdfFile);
 router.post("/list-files", auth_middleware_1.default, pdfController_1.default.ListPdfFiles);
 router.get("/get-file/:fileId", auth_middleware_1.default, pdfController_1.default.GetPdfFileById);
