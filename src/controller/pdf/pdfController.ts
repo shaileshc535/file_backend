@@ -280,7 +280,7 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
     }
 
     const getFirstPart = (str) => {
-      return str.split(".")[0];
+      return str.split("_")[0];
     };
 
     const getSecondPart = (str) => {
