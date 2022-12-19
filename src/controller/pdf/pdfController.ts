@@ -31,10 +31,11 @@ const AddNewPdf = async (req, res: Response) => {
     const user = JSON.parse(JSON.stringify(req.user));
 
     if (!req.file) {
-      // logger.error("Please upload a file");
-
-      return res.status(400).json({
-        message: "Please upload a file",
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Please upload a file.",
+        data: "",
       });
     }
 
@@ -53,8 +54,6 @@ const AddNewPdf = async (req, res: Response) => {
 
     await newFile.save();
 
-    // logger.info("File Uploaded successfully");
-
     res.status(200).json({
       type: "success",
       status: 200,
@@ -62,7 +61,7 @@ const AddNewPdf = async (req, res: Response) => {
       data: newFile,
     });
   } catch (error) {
-    // logger.error(error.message);
+    logger.error(error.message);
     return res.status(404).json({
       type: "error",
       status: 404,
@@ -72,121 +71,107 @@ const AddNewPdf = async (req, res: Response) => {
 };
 
 const UpdatePdfFile = async (req, res: Response) => {
-  // try {
-  const { fileId } = req.body;
+  try {
+    const { fileId } = req.body;
 
-  const user = JSON.parse(JSON.stringify(req.user));
+    const user = JSON.parse(JSON.stringify(req.user));
 
-  const Time = Date.now();
+    const Time = Date.now();
 
-  const imageString = user._id + " : " + moment(Time).format("llll");
-  const imageName = user._id + Time;
+    const imageString = user._id + " : " + moment(Time).format("llll");
+    const imageName = user._id + Time;
 
-  const width = 800;
-  const height = 300;
+    const width = 800;
+    const height = 300;
 
-  const canvas = createCanvas(width, height);
-  const context = canvas.getContext("2d");
+    const canvas = createCanvas(width, height);
+    const context = canvas.getContext("2d");
 
-  context.fillStyle = "#fff";
-  context.fillRect(0, 0, width, height);
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, width, height);
 
-  context.font = "bold 70pt";
-  context.textAlign = "center";
-  context.textBaseline = "top";
-  context.fillStyle = "#000";
+    context.font = "bold 70pt";
+    context.textAlign = "center";
+    context.textBaseline = "top";
+    context.fillStyle = "#000";
 
-  context.font = "20pt 'PT Sans'";
-  context.fillText(imageString, 400, 200);
+    context.font = "20pt 'PT Sans'";
+    context.fillText(imageString, 400, 200);
 
-  const buffer = canvas.toBuffer("image/png");
-  fs.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
+    const buffer = canvas.toBuffer("image/png");
+    fs.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
 
-  const base_url = process.env.BASE_URL;
+    const base_url = process.env.BASE_URL;
 
-  const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
+    const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
 
-  const file_url = base_url + "/public/pdf/" + req.file.filename;
+    const file_url = base_url + "/public/pdf/" + req.file.filename;
 
-  console.log("stamp_url", stamp_url);
+    const fileData = await PdfSchema.findOne({
+      _id: fileId,
+      isdeleted: false,
+    }).populate("owner");
 
-  const fileData = await PdfSchema.findOne({
-    _id: fileId,
-    isdeleted: false,
-  }).populate("owner");
+    if (!fileData) {
+      logger.error("File not found");
 
-  if (!fileData) {
-    logger.error("File not found");
+      return res.status(400).json({
+        type: "error",
+        status: 400,
+        message: "File not found",
+      });
+    }
 
-    return res.status(400).json({
+    const getFirstPart = (str) => {
+      return str.split(".")[0];
+    };
+
+    const getSecondPart = (str) => {
+      return str.split(".")[1];
+    };
+
+    const firstChar = getFirstPart(fileData.docname);
+    const secoundChar = getSecondPart(fileData.docname);
+
+    const finalVal = firstChar + "_signed" + "." + secoundChar;
+
+    const requestData = {
+      file_url: file_url,
+      docname: finalVal,
+      // sign_stamp: stamp_url,
+      filesize: req.file.size,
+      isupdated: true,
+      updated_at: Date.now(),
+      is_signed: true,
+      is_editable: true,
+    };
+
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: fileId,
+      },
+      requestData
+    );
+
+    const updatedData = await PdfSchema.findOne({
+      _id: fileId,
+      isdeleted: false,
+    });
+
+    res.status(200).json({
+      type: "success",
+      status: 200,
+      message: "File Updated successfully",
+      data: updatedData,
+    });
+  } catch (error) {
+    // logger.error(error.message);
+    return res.status(404).json({
       type: "error",
-      status: 400,
-      message: "File not found",
+      status: 404,
+      message: error.message,
     });
   }
-
-  const getFirstPart = (str) => {
-    return str.split(".")[0];
-  };
-
-  const getSecondPart = (str) => {
-    return str.split(".")[1];
-  };
-
-  const firstChar = getFirstPart(fileData.docname);
-  const secoundChar = getSecondPart(fileData.docname);
-
-  const finalVal = firstChar + "_signed" + "." + secoundChar;
-
-  const requestData = {
-    file_url: file_url,
-    docname: finalVal,
-    // sign_stamp: stamp_url,
-    filesize: req.file.size,
-    isupdated: true,
-    updated_at: Date.now(),
-    is_signed: true,
-    is_editable: true,
-  };
-
-  await PdfSchema.findByIdAndUpdate(
-    {
-      _id: fileId,
-    },
-    requestData
-  );
-
-  // const reqData = {
-  //   IsSigned: true,
-  //   signTime: Date.now(),
-  // };
-
-  // await SharedFileSchema.findByIdAndUpdate(
-  //   {
-  //     _id: req.body.docFileId,
-  //   },
-  //   reqData
-  // );
-
-  const updatedData = await PdfSchema.findOne({
-    _id: fileId,
-    isdeleted: false,
-  });
-
-  res.status(200).json({
-    type: "success",
-    status: 200,
-    message: "File Uploaded successfully",
-    data: updatedData,
-  });
-  // } catch (error) {
-  //   // logger.error(error.message);
-  //   return res.status(404).json({
-  //     type: "error",
-  //     status: 404,
-  //     message: error.message,
-  //   });
-  // }
 };
 
 const UpdateSignedPdfFile = async (req, res: Response) => {
@@ -235,9 +220,9 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
     if (!fileData) {
       logger.error("File not found");
 
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: "File not found",
       });
     }
@@ -273,18 +258,6 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
       requestData
     );
 
-    // const reqData = {
-    //   IsSigned: true,
-    //   signTime: Date.now(),
-    // };
-
-    // await SharedFileSchema.findByIdAndUpdate(
-    //   {
-    //     _id: req.body.docFileId,
-    //   },
-    //   reqData
-    // );
-
     const updatedData = await PdfSchema.findOne({
       _id: fileId,
       isdeleted: false,
@@ -306,9 +279,9 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
   } catch (error) {
     logger.error(error.message);
 
-    return res.status(404).json({
+    return res.status(400).json({
       type: "error",
-      status: 404,
+      status: 400,
       message: error.message,
     });
   }
@@ -322,9 +295,9 @@ const ReviewPdfFile = async (req, res: Response) => {
     const user = JSON.parse(JSON.stringify(req.user));
 
     if (isReviewd == undefined) {
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: "File review is required.",
       });
     }
@@ -338,9 +311,9 @@ const ReviewPdfFile = async (req, res: Response) => {
       .populate("fileId");
 
     if (!fileData) {
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: "File not found",
       });
     }
@@ -348,13 +321,9 @@ const ReviewPdfFile = async (req, res: Response) => {
     const file = JSON.parse(JSON.stringify(fileData));
 
     if (file.senderId._id !== user._id) {
-      // logger.error(
-      //   `You are not authorised to review thid file. Please contact ${file.senderId.fullname} for permission`
-      // );
-
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: `You are not authorised to review thid file. Please contact ${file.senderId.fullname} for permission`,
         data: "",
       });
@@ -448,9 +417,9 @@ const ReviewPdfFile = async (req, res: Response) => {
   } catch (error) {
     // logger.error(error.message);
 
-    return res.status(404).json({
+    return res.status(400).json({
       type: "error",
-      status: 404,
+      status: 400,
       message: error.message,
     });
   }
@@ -473,18 +442,18 @@ const DeletePdfFile = async (req, res: Response) => {
       // logger.error(
       //   `you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`
       // );
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to delete this file. Please contact ${file.owner.fullname} for permission`,
       });
     }
 
     if (!fileData) {
       // logger.error(`File not found`);
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: "File not found",
       });
     }

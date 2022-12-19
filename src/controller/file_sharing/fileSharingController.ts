@@ -33,12 +33,12 @@ const ShareFile = async (req, res: Response) => {
         if (file.owner._id !== user._id) {
           logger.error({
             type: "error",
-            status: 400,
+            status: 200,
             message: `you don’t have permission to share this file. Please contact ${file.owner.fullname} for permission`,
           });
-          return res.status(400).json({
+          return res.status(200).json({
             type: "error",
-            status: 400,
+            status: 200,
             message: `you don’t have permission to share this file. Please contact ${file.owner.fullname} for permission`,
           });
         }
@@ -74,14 +74,14 @@ const ShareFile = async (req, res: Response) => {
       } else {
         logger.error({
           type: "success",
-          status: 400,
+          status: 200,
           message: "File receiver is required",
           data: "",
         });
 
-        res.status(400).json({
+        res.status(200).json({
           type: "success",
-          status: 400,
+          status: 200,
           message: "File receiver is required",
           data: "",
         });
@@ -89,13 +89,13 @@ const ShareFile = async (req, res: Response) => {
     } else {
       logger.error({
         type: "success",
-        status: 400,
+        status: 200,
         message: "File is required",
         data: "",
       });
-      res.status(400).json({
+      res.status(200).json({
         type: "success",
-        status: 400,
+        status: 200,
         message: "File is required",
         data: "",
       });
@@ -129,13 +129,13 @@ const GrandAccess = async (req, res: Response) => {
     if (file.senderId._id !== user._id) {
       logger.info({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
       });
 
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
       });
     }
@@ -195,12 +195,12 @@ const RevokeAccess = async (req, res: Response) => {
     if (file.senderId._id !== user._id) {
       logger.error({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
       });
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
       });
     }
@@ -261,12 +261,12 @@ const DeleteSharedFile = async (req, res: Response) => {
     if (file.senderId._id !== user._id) {
       logger.error({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
       });
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
       });
     }
@@ -539,7 +539,12 @@ const ListSignedPdfFiles = async (req, res: Response) => {
 
       if (result_count < 1) {
         logger.error("Signed Files not found.");
-        throw new Error("Signed Files not found.");
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Signed Files not found.",
+          data: "",
+        });
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -643,12 +648,11 @@ const ListReviewedPdfFiles = async (req, res: Response) => {
 
       if (result_count < 1) {
         logger.error("Reviewed Files not found.");
-        // throw new Error("Reviewed Files not found.");
         res.status(200).json({
           type: "success",
           status: 200,
           message: "Reviewed Files not found.",
-          data: "result",
+          data: "",
         });
       }
 
@@ -754,7 +758,12 @@ const ListReviewedFailPdfFiles = async (req, res: Response) => {
 
       if (result_count < 1) {
         logger.error("Reviewed Files not found.");
-        throw new Error("Reviewed Files not found.");
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: "",
+        });
       }
 
       const totalPages = Math.ceil(result_count / limit);
@@ -859,7 +868,12 @@ const ListReviewedPassPdfFiles = async (req, res: Response) => {
 
       if (result_count < 1) {
         logger.error("Reviewed Files not found.");
-        throw new Error("Reviewed Files not found.");
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: "",
+        });
       }
 
       const totalPages = Math.ceil(result_count / limit);
