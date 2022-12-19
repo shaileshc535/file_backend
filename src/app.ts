@@ -6,17 +6,27 @@ import getConnection from "./config/connection";
 import Router from "./routes/index";
 import logger from "./logger";
 import path from "path";
+import compression from "compression";
 
 config();
 
 const app = express();
+
+app.use(compression());
+
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cors());
+
+app.options("*", cors());
+
 app.use(methodOverride("X-HTTP-Method-Override"));
 
 //DATABASE CONNECTION
 app.use(getConnection);
+
 app.use("/public", express.static("./public"));
 //View Engine
 app.set("views", path.join(__dirname, "/views"));

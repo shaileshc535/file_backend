@@ -643,7 +643,13 @@ const ListReviewedPdfFiles = async (req, res: Response) => {
 
       if (result_count < 1) {
         logger.error("Reviewed Files not found.");
-        throw new Error("Reviewed Files not found.");
+        // throw new Error("Reviewed Files not found.");
+        res.status(200).json({
+          type: "success",
+          status: 200,
+          message: "Reviewed Files not found.",
+          data: "result",
+        });
       }
 
       const totalPages = Math.ceil(result_count / limit);
