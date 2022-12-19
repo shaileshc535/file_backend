@@ -70,6 +70,58 @@ const AddNewPdf = async (req, res: Response) => {
   }
 };
 
+const renamePdf = async (req, res: Response) => {
+  try {
+    const user = JSON.parse(JSON.stringify(req.user));
+
+    const fileData = await PdfSchema.findOne({
+      _id: req.body.fileId,
+      isdeleted: false,
+    }).populate("owner");
+
+    if (!fileData) {
+      logger.error("File not found");
+
+      return res.status(200).json({
+        type: "error",
+        status: 200,
+        message: "File not found",
+      });
+    }
+
+    const requestData = {
+      docname: req.body.docname,
+      isupdated: true,
+      updated_at: Date.now(),
+    };
+
+    await PdfSchema.findByIdAndUpdate(
+      {
+        _id: req.body.fileId,
+      },
+      requestData
+    );
+
+    const updatedData = await PdfSchema.findOne({
+      _id: req.body.fileId,
+      isdeleted: false,
+    });
+
+    res.status(200).json({
+      type: "success",
+      status: 200,
+      message: "File Name Updated successfully",
+      data: updatedData,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
 const UpdatePdfFile = async (req, res: Response) => {
   try {
     const { fileId } = req.body;
@@ -115,9 +167,9 @@ const UpdatePdfFile = async (req, res: Response) => {
     if (!fileData) {
       logger.error("File not found");
 
-      return res.status(400).json({
+      return res.status(200).json({
         type: "error",
-        status: 400,
+        status: 200,
         message: "File not found",
       });
     }
@@ -709,6 +761,7 @@ const CheckPdfFileIsEditable = async (req, res: Response) => {
 
 export default {
   AddNewPdf,
+  renamePdf,
   UpdatePdfFile,
   UpdateSignedPdfFile,
   ReviewPdfFile,
