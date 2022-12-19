@@ -19,7 +19,7 @@ app.use(methodOverride("X-HTTP-Method-Override"));
 app.use(getConnection);
 app.use("/public", express.static("./public"));
 //View Engine
-// app.set("views", path.join(__dirname, "/views"));
+app.set("views", path.join(__dirname, "/views"));
 // app.set("view engine", "ejs");
 
 //ROUTES
