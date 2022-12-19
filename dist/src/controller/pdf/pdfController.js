@@ -216,7 +216,7 @@ const UpdateSignedPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, func
             });
         }
         const getFirstPart = (str) => {
-            return str.split(".")[0];
+            return str.split("_")[0];
         };
         const getSecondPart = (str) => {
             return str.split(".")[1];
