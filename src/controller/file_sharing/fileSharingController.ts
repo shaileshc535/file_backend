@@ -16,6 +16,42 @@ export interface ISHAREDFILE {
   file_open_at: Date;
 }
 
+const FilesGetById = async (req, res: Response) => {
+  try {
+    const { fileId } = req.params;
+
+    const result = await SharedFileSchema.find({
+      _id: fileId,
+      isdeleted: false,
+    })
+      .populate("senderId")
+      .populate("receiverId")
+      .populate("fileId");
+
+    logger.info({
+      status: 200,
+      type: "success",
+      message: "File Fetched Successfully",
+      data: result,
+    });
+
+    return res.status(200).json({
+      status: 200,
+      type: "success",
+      message: "File Fetched Successfully",
+      data: result,
+    });
+  } catch (error) {
+    logger.error(error.message);
+
+    return res.status(404).json({
+      type: "error",
+      status: 404,
+      message: error.message,
+    });
+  }
+};
+
 const ShareFile = async (req, res: Response) => {
   try {
     const requestedData = req.body;
@@ -114,207 +150,27 @@ const ShareFile = async (req, res: Response) => {
   }
 };
 
-const GrandAccess = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    const id = req.params.id;
-
-    const fileData = await SharedFileSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    }).populate("senderId");
-
-    const file = JSON.parse(JSON.stringify(fileData));
-
-    if (file.senderId._id !== user._id) {
-      logger.info({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-
-      return res.status(200).json({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-    }
-
-    const requestData = {
-      access: true,
-      IsSigned: true,
-      updated_at: Date.now(),
-    };
-
-    await SharedFileSchema.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      requestData
-    );
-
-    const updatedData = await SharedFileSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    });
-
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "File access changes to grand successfully",
-      data: updatedData.access,
-    });
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "File access changes to grand successfully",
-      data: updatedData.access,
-    });
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const RevokeAccess = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    const id = req.params.id;
-
-    const fileData = await SharedFileSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    }).populate("senderId");
-
-    const file = JSON.parse(JSON.stringify(fileData));
-
-    if (file.senderId._id !== user._id) {
-      logger.error({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-      return res.status(200).json({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-    }
-
-    const requestData = {
-      access: false,
-      IsSigned: false,
-      updated_at: Date.now(),
-    };
-
-    await SharedFileSchema.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      requestData
-    );
-
-    const updatedData = await SharedFileSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    });
-
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "File access changes to revoke successfully",
-      data: updatedData.access,
-    });
-
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "File access changes to revoke successfully",
-      data: updatedData.access,
-    });
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const DeleteSharedFile = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    const id = req.params.id;
-
-    const fileData = await SharedFileSchema.findOne({
-      _id: id,
-      isdeleted: false,
-    }).populate("senderId");
-
-    const file = JSON.parse(JSON.stringify(fileData));
-
-    if (file.senderId._id !== user._id) {
-      logger.error({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-      return res.status(200).json({
-        type: "error",
-        status: 200,
-        message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
-      });
-    }
-
-    const requestData = {
-      isdeleted: true,
-      deleted_at: Date.now(),
-    };
-
-    await SharedFileSchema.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      requestData
-    );
-
-    logger.info({
-      type: "success",
-      status: 200,
-      message: "Shared File deleted successfully",
-      data: "",
-    });
-    res.status(200).json({
-      type: "success",
-      status: 200,
-      message: "Shared File deleted successfully",
-      data: "",
-    });
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const ListSenderFile = async (req, res: Response) => {
+const ListReviewedPdfFiles = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
     let { page, limit, sort, cond, paginate } = req.body;
 
     if (user) {
-      cond = { senderId: user._id, access: true, isdeleted: false, ...cond };
+      cond = {
+        senderId: user._id,
+        access: true,
+        isdeleted: false,
+        IsSigned: true,
+        isReviewd: true,
+        ...cond,
+      };
     }
+
     if (!page || page < 1) {
       page = 1;
+    }
+    if (paginate == undefined) {
+      paginate = true;
     }
     if (!limit) {
       limit = 10;
@@ -325,33 +181,10 @@ const ListSenderFile = async (req, res: Response) => {
     if (!sort) {
       sort = { createdAt: -1 };
     }
-    if (paginate == undefined) {
-      paginate = true;
-    }
 
     limit = parseInt(limit);
 
-    if (paginate == false) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        data: result,
-      });
-    } else if (paginate == true) {
+    if (paginate !== false) {
       const result = await SharedFileSchema.find(cond)
         .populate("senderId")
         .populate("receiverId")
@@ -361,12 +194,13 @@ const ListSenderFile = async (req, res: Response) => {
         .limit(limit);
 
       const result_count = await SharedFileSchema.find(cond).count();
+
       const totalPages = Math.ceil(result_count / limit);
 
       logger.info({
         type: "success",
         status: 200,
-        message: "Shared File list fetched successfully",
+        message: "Reviewed Files list fetched successfully",
         page: page,
         limit: limit,
         totalPages: totalPages,
@@ -377,11 +211,31 @@ const ListSenderFile = async (req, res: Response) => {
       res.status(200).json({
         type: "success",
         status: 200,
-        message: "Shared File list fetched successfully",
+        message: "Reviewed Files list fetched successfully",
         page: page,
         limit: limit,
         totalPages: totalPages,
         total: result_count,
+        data: result,
+      });
+    } else if (paginate !== true) {
+      const result = await SharedFileSchema.find(cond)
+        .populate("senderId")
+        .populate("receiverId")
+        .populate("fileId")
+        .sort(sort);
+
+      logger.info({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
+        data: result,
+      });
+
+      res.status(200).json({
+        type: "success",
+        status: 200,
+        message: "Reviewed Files list fetched successfully",
         data: result,
       });
     }
@@ -537,16 +391,6 @@ const ListSignedPdfFiles = async (req, res: Response) => {
 
       const result_count = await SharedFileSchema.find(cond).count();
 
-      // if (result_count < 1) {
-      //   logger.error("Signed Files not found.");
-      //   res.status(200).json({
-      //     type: "success",
-      //     status: 200,
-      //     message: "Signed Files not found.",
-      //     data: "",
-      //   });
-      // }
-
       const totalPages = Math.ceil(result_count / limit);
 
       logger.info({
@@ -601,454 +445,61 @@ const ListSignedPdfFiles = async (req, res: Response) => {
   }
 };
 
-const ListReviewedPdfFiles = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond, paginate } = req.body;
-
-    if (user) {
-      cond = {
-        senderId: user._id,
-        access: true,
-        isdeleted: false,
-        IsSigned: true,
-        isReviewd: true,
-        ...cond,
-      };
-    }
-
-    if (!page || page < 1) {
-      page = 1;
-    }
-    if (paginate == undefined) {
-      paginate = true;
-    }
-    if (!limit) {
-      limit = 10;
-    }
-    if (!cond) {
-      cond = {};
-    }
-    if (!sort) {
-      sort = { createdAt: -1 };
-    }
-
-    limit = parseInt(limit);
-
-    if (paginate !== false) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
-      const result_count = await SharedFileSchema.find(cond).count();
-
-      // if (result_count < 1) {
-      //   logger.error("Reviewed Files not found.");
-      //   res.status(200).json({
-      //     type: "success",
-      //     status: 200,
-      //     message: "Reviewed Files not found.",
-      //     data: "",
-      //   });
-      // }
-
-      const totalPages = Math.ceil(result_count / limit);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-    } else if (paginate !== true) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-    }
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const ListReviewedFailPdfFiles = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond, paginate } = req.body;
-
-    if (user) {
-      cond = {
-        senderId: user._id,
-        access: true,
-        isdeleted: false,
-        IsSigned: true,
-        isReviewd: true,
-        isPassed: false,
-        ...cond,
-      };
-    }
-
-    if (!page || page < 1) {
-      page = 1;
-    }
-    if (paginate == undefined) {
-      paginate = true;
-    }
-    if (!limit) {
-      limit = 10;
-    }
-    if (!cond) {
-      cond = {};
-    }
-    if (!sort) {
-      sort = { createdAt: -1 };
-    }
-
-    limit = parseInt(limit);
-
-    if (paginate !== false) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
-      const result_count = await SharedFileSchema.find(cond).count();
-
-      // if (result_count < 1) {
-      //   logger.error("Reviewed Files not found.");
-      //   res.status(200).json({
-      //     type: "success",
-      //     status: 200,
-      //     message: "Reviewed Files not found.",
-      //     data: "",
-      //   });
-      // }
-
-      const totalPages = Math.ceil(result_count / limit);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-    } else if (paginate !== true) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-    }
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const ListReviewedPassPdfFiles = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond, paginate } = req.body;
-
-    if (user) {
-      cond = {
-        senderId: user._id,
-        access: true,
-        isdeleted: false,
-        IsSigned: true,
-        isReviewd: true,
-        isPassed: true,
-        ...cond,
-      };
-    }
-
-    if (!page || page < 1) {
-      page = 1;
-    }
-    if (paginate == undefined) {
-      paginate = true;
-    }
-    if (!limit) {
-      limit = 10;
-    }
-    if (!cond) {
-      cond = {};
-    }
-    if (!sort) {
-      sort = { createdAt: -1 };
-    }
-
-    limit = parseInt(limit);
-
-    if (paginate !== false) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
-      const result_count = await SharedFileSchema.find(cond).count();
-
-      // if (result_count < 1) {
-      //   logger.error("Reviewed Files not found.");
-      //   res.status(200).json({
-      //     type: "success",
-      //     status: 200,
-      //     message: "Reviewed Files not found.",
-      //     data: "",
-      //   });
-      // }
-
-      const totalPages = Math.ceil(result_count / limit);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-    } else if (paginate !== true) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Reviewed Files list fetched successfully",
-        data: result,
-      });
-    }
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const getByFileId = async (req, res: Response) => {
-  try {
-    const user = JSON.parse(JSON.stringify(req.user));
-    let { page, limit, sort, cond, paginate } = req.body;
-
-    const file = req.body.file;
-
-    if (user) {
-      cond = { fileId: file, access: true, isdeleted: false, ...cond };
-    }
-
-    if (!page || page < 1) {
-      page = 1;
-    }
-    if (paginate == undefined) {
-      paginate = true;
-    }
-    if (!limit) {
-      limit = 10;
-    }
-    if (!cond) {
-      cond = {};
-    }
-    if (!sort) {
-      sort = { createdAt: -1 };
-    }
-
-    limit = parseInt(limit);
-
-    if (paginate !== false) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
-      const result_count = await SharedFileSchema.find(cond).count();
-      const totalPages = Math.ceil(result_count / limit);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        page: page,
-        limit: limit,
-        totalPages: totalPages,
-        total: result_count,
-        data: result,
-      });
-    } else if (paginate !== true) {
-      const result = await SharedFileSchema.find(cond)
-        .populate("senderId")
-        .populate("receiverId")
-        .populate("fileId")
-        .sort(sort);
-
-      logger.info({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        data: result,
-      });
-
-      res.status(200).json({
-        type: "success",
-        status: 200,
-        message: "Shared File list fetched successfully",
-        data: result,
-      });
-    }
-  } catch (error) {
-    logger.error(error.message);
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
-
-const ReceivedFileById = async (req, res: Response) => {
+const GrandAccess = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
     const id = req.params.id;
 
-    const result = await SharedFileSchema.find({
+    const fileData = await SharedFileSchema.findOne({
       _id: id,
-      receiverId: user._id,
-      access: true,
       isdeleted: false,
-    })
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId");
+    }).populate("senderId");
+
+    const file = JSON.parse(JSON.stringify(fileData));
+
+    if (file.senderId._id !== user._id) {
+      logger.info({
+        type: "error",
+        status: 200,
+        message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
+
+      return res.status(200).json({
+        type: "error",
+        status: 200,
+        message: `you don’t have permission to change grand access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
+    }
+
+    const requestData = {
+      access: true,
+      IsSigned: true,
+      updated_at: Date.now(),
+    };
+
+    await SharedFileSchema.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      requestData
+    );
+
+    const updatedData = await SharedFileSchema.findOne({
+      _id: id,
+      isdeleted: false,
+    });
 
     logger.info({
       type: "success",
       status: 200,
-      message: "Received File details fetched successfully",
-      data: result,
+      message: "File access changes to grand successfully",
+      data: updatedData.access,
     });
     res.status(200).json({
       type: "success",
       status: 200,
-      message: "Received File details fetched successfully",
-      data: result,
+      message: "File access changes to grand successfully",
+      data: updatedData.access,
     });
   } catch (error) {
     logger.error(error.message);
@@ -1060,33 +511,61 @@ const ReceivedFileById = async (req, res: Response) => {
   }
 };
 
-const SendFileById = async (req, res: Response) => {
+const RevokeAccess = async (req, res: Response) => {
   try {
     const user = JSON.parse(JSON.stringify(req.user));
     const id = req.params.id;
 
-    const result = await SharedFileSchema.find({
+    const fileData = await SharedFileSchema.findOne({
       _id: id,
-      senderId: user._id,
-      access: true,
       isdeleted: false,
-    })
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId");
+    }).populate("senderId");
+
+    const file = JSON.parse(JSON.stringify(fileData));
+
+    if (file.senderId._id !== user._id) {
+      logger.error({
+        type: "error",
+        status: 200,
+        message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
+      return res.status(200).json({
+        type: "error",
+        status: 200,
+        message: `you don’t have permission to change revoke access to this file. Please contact ${file.senderId.fullname} for permission`,
+      });
+    }
+
+    const requestData = {
+      access: false,
+      IsSigned: false,
+      updated_at: Date.now(),
+    };
+
+    await SharedFileSchema.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      requestData
+    );
+
+    const updatedData = await SharedFileSchema.findOne({
+      _id: id,
+      isdeleted: false,
+    });
 
     logger.info({
       type: "success",
       status: 200,
-      message: "Send File details fetched successfully",
-      data: result,
+      message: "File access changes to revoke successfully",
+      data: updatedData.access,
     });
 
     res.status(200).json({
       type: "success",
       status: 200,
-      message: "Send File details fetched successfully",
-      data: result,
+      message: "File access changes to revoke successfully",
+      data: updatedData.access,
     });
   } catch (error) {
     logger.error(error.message);
@@ -1098,55 +577,556 @@ const SendFileById = async (req, res: Response) => {
   }
 };
 
-const FilesGetById = async (req, res: Response) => {
-  try {
-    const { fileId } = req.params;
+// const DeleteSharedFile = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     const id = req.params.id;
 
-    const result = await SharedFileSchema.find({
-      _id: fileId,
-      isdeleted: false,
-    })
-      .populate("senderId")
-      .populate("receiverId")
-      .populate("fileId");
+//     const fileData = await SharedFileSchema.findOne({
+//       _id: id,
+//       isdeleted: false,
+//     }).populate("senderId");
 
-    logger.info({
-      status: 200,
-      type: "success",
-      message: "File Fetched Successfully",
-      data: result,
-    });
+//     const file = JSON.parse(JSON.stringify(fileData));
 
-    return res.status(200).json({
-      status: 200,
-      type: "success",
-      message: "File Fetched Successfully",
-      data: result,
-    });
-  } catch (error) {
-    logger.error(error.message);
+//     if (file.senderId._id !== user._id) {
+//       logger.error({
+//         type: "error",
+//         status: 200,
+//         message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
+//       });
+//       return res.status(200).json({
+//         type: "error",
+//         status: 200,
+//         message: `you don’t have permission to delete this file. Please contact ${file.senderId.fullname} for permission`,
+//       });
+//     }
 
-    return res.status(404).json({
-      type: "error",
-      status: 404,
-      message: error.message,
-    });
-  }
-};
+//     const requestData = {
+//       isdeleted: true,
+//       deleted_at: Date.now(),
+//     };
+
+//     await SharedFileSchema.findByIdAndUpdate(
+//       {
+//         _id: id,
+//       },
+//       requestData
+//     );
+
+//     logger.info({
+//       type: "success",
+//       status: 200,
+//       message: "Shared File deleted successfully",
+//       data: "",
+//     });
+//     res.status(200).json({
+//       type: "success",
+//       status: 200,
+//       message: "Shared File deleted successfully",
+//       data: "",
+//     });
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const ListSenderFile = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     let { page, limit, sort, cond, paginate } = req.body;
+
+//     if (user) {
+//       cond = { senderId: user._id, access: true, isdeleted: false, ...cond };
+//     }
+//     if (!page || page < 1) {
+//       page = 1;
+//     }
+//     if (!limit) {
+//       limit = 10;
+//     }
+//     if (!cond) {
+//       cond = {};
+//     }
+//     if (!sort) {
+//       sort = { createdAt: -1 };
+//     }
+//     if (paginate == undefined) {
+//       paginate = true;
+//     }
+
+//     limit = parseInt(limit);
+
+//     if (paginate == false) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         data: result,
+//       });
+//     } else if (paginate == true) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort)
+//         .skip((page - 1) * limit)
+//         .limit(limit);
+
+//       const result_count = await SharedFileSchema.find(cond).count();
+//       const totalPages = Math.ceil(result_count / limit);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+//     }
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const ListReviewedFailPdfFiles = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     let { page, limit, sort, cond, paginate } = req.body;
+
+//     if (user) {
+//       cond = {
+//         senderId: user._id,
+//         access: true,
+//         isdeleted: false,
+//         IsSigned: true,
+//         isReviewd: true,
+//         isPassed: false,
+//         ...cond,
+//       };
+//     }
+
+//     if (!page || page < 1) {
+//       page = 1;
+//     }
+//     if (paginate == undefined) {
+//       paginate = true;
+//     }
+//     if (!limit) {
+//       limit = 10;
+//     }
+//     if (!cond) {
+//       cond = {};
+//     }
+//     if (!sort) {
+//       sort = { createdAt: -1 };
+//     }
+
+//     limit = parseInt(limit);
+
+//     if (paginate !== false) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort)
+//         .skip((page - 1) * limit)
+//         .limit(limit);
+
+//       const result_count = await SharedFileSchema.find(cond).count();
+
+//       // if (result_count < 1) {
+//       //   logger.error("Reviewed Files not found.");
+//       //   res.status(200).json({
+//       //     type: "success",
+//       //     status: 200,
+//       //     message: "Reviewed Files not found.",
+//       //     data: "",
+//       //   });
+//       // }
+
+//       const totalPages = Math.ceil(result_count / limit);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+//     } else if (paginate !== true) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         data: result,
+//       });
+//     }
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const ListReviewedPassPdfFiles = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     let { page, limit, sort, cond, paginate } = req.body;
+
+//     if (user) {
+//       cond = {
+//         senderId: user._id,
+//         access: true,
+//         isdeleted: false,
+//         IsSigned: true,
+//         isReviewd: true,
+//         isPassed: true,
+//         ...cond,
+//       };
+//     }
+
+//     if (!page || page < 1) {
+//       page = 1;
+//     }
+//     if (paginate == undefined) {
+//       paginate = true;
+//     }
+//     if (!limit) {
+//       limit = 10;
+//     }
+//     if (!cond) {
+//       cond = {};
+//     }
+//     if (!sort) {
+//       sort = { createdAt: -1 };
+//     }
+
+//     limit = parseInt(limit);
+
+//     if (paginate !== false) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort)
+//         .skip((page - 1) * limit)
+//         .limit(limit);
+
+//       const result_count = await SharedFileSchema.find(cond).count();
+
+//       // if (result_count < 1) {
+//       //   logger.error("Reviewed Files not found.");
+//       //   res.status(200).json({
+//       //     type: "success",
+//       //     status: 200,
+//       //     message: "Reviewed Files not found.",
+//       //     data: "",
+//       //   });
+//       // }
+
+//       const totalPages = Math.ceil(result_count / limit);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+//     } else if (paginate !== true) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Reviewed Files list fetched successfully",
+//         data: result,
+//       });
+//     }
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const getByFileId = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     let { page, limit, sort, cond, paginate } = req.body;
+
+//     const file = req.body.file;
+
+//     if (user) {
+//       cond = { fileId: file, access: true, isdeleted: false, ...cond };
+//     }
+
+//     if (!page || page < 1) {
+//       page = 1;
+//     }
+//     if (paginate == undefined) {
+//       paginate = true;
+//     }
+//     if (!limit) {
+//       limit = 10;
+//     }
+//     if (!cond) {
+//       cond = {};
+//     }
+//     if (!sort) {
+//       sort = { createdAt: -1 };
+//     }
+
+//     limit = parseInt(limit);
+
+//     if (paginate !== false) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort)
+//         .skip((page - 1) * limit)
+//         .limit(limit);
+
+//       const result_count = await SharedFileSchema.find(cond).count();
+//       const totalPages = Math.ceil(result_count / limit);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         page: page,
+//         limit: limit,
+//         totalPages: totalPages,
+//         total: result_count,
+//         data: result,
+//       });
+//     } else if (paginate !== true) {
+//       const result = await SharedFileSchema.find(cond)
+//         .populate("senderId")
+//         .populate("receiverId")
+//         .populate("fileId")
+//         .sort(sort);
+
+//       logger.info({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         data: result,
+//       });
+
+//       res.status(200).json({
+//         type: "success",
+//         status: 200,
+//         message: "Shared File list fetched successfully",
+//         data: result,
+//       });
+//     }
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const ReceivedFileById = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     const id = req.params.id;
+
+//     const result = await SharedFileSchema.find({
+//       _id: id,
+//       receiverId: user._id,
+//       access: true,
+//       isdeleted: false,
+//     })
+//       .populate("senderId")
+//       .populate("receiverId")
+//       .populate("fileId");
+
+//     logger.info({
+//       type: "success",
+//       status: 200,
+//       message: "Received File details fetched successfully",
+//       data: result,
+//     });
+//     res.status(200).json({
+//       type: "success",
+//       status: 200,
+//       message: "Received File details fetched successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// const SendFileById = async (req, res: Response) => {
+//   try {
+//     const user = JSON.parse(JSON.stringify(req.user));
+//     const id = req.params.id;
+
+//     const result = await SharedFileSchema.find({
+//       _id: id,
+//       senderId: user._id,
+//       access: true,
+//       isdeleted: false,
+//     })
+//       .populate("senderId")
+//       .populate("receiverId")
+//       .populate("fileId");
+
+//     logger.info({
+//       type: "success",
+//       status: 200,
+//       message: "Send File details fetched successfully",
+//       data: result,
+//     });
+
+//     res.status(200).json({
+//       type: "success",
+//       status: 200,
+//       message: "Send File details fetched successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     logger.error(error.message);
+//     return res.status(404).json({
+//       type: "error",
+//       status: 404,
+//       message: error.message,
+//     });
+//   }
+// };
 
 export default {
+  FilesGetById,
   ShareFile,
+  ListReviewedPdfFiles,
+  ListReceivedFile,
+  ListSignedPdfFiles,
   GrandAccess,
   RevokeAccess,
-  DeleteSharedFile,
-  ListSenderFile,
-  ListReceivedFile,
-  SendFileById,
-  ReceivedFileById,
-  getByFileId,
-  ListSignedPdfFiles,
-  ListReviewedPdfFiles,
-  ListReviewedFailPdfFiles,
-  ListReviewedPassPdfFiles,
-  FilesGetById,
+  // DeleteSharedFile,
+  // ListSenderFile,
+  // ListReviewedFailPdfFiles,
+  // SendFileById,
+  // ReceivedFileById,
+  // getByFileId,
+  // ListReviewedPassPdfFiles,
 };

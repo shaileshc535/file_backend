@@ -8,17 +8,17 @@ const fileSharingController_1 = __importDefault(require("../controller/file_shar
 const auth_middleware_1 = __importDefault(require("../middlewares/auth.middleware"));
 const router = express_1.default.Router();
 router.post("/share-file", auth_middleware_1.default, fileSharingController_1.default.ShareFile);
-router.post("/get-file-list", auth_middleware_1.default, fileSharingController_1.default.getByFileId);
-router.post("/send-files-list", auth_middleware_1.default, fileSharingController_1.default.ListSenderFile);
+router.post("/review-files-list", auth_middleware_1.default, fileSharingController_1.default.ListReviewedPdfFiles);
 router.post("/receive-files-list", auth_middleware_1.default, fileSharingController_1.default.ListReceivedFile);
 router.post("/signed-files-list", auth_middleware_1.default, fileSharingController_1.default.ListSignedPdfFiles);
-router.post("/review-files-list", auth_middleware_1.default, fileSharingController_1.default.ListReviewedPdfFiles);
-router.post("/review-fail-files", auth_middleware_1.default, fileSharingController_1.default.ListReviewedFailPdfFiles);
-router.post("/review-pass-files", auth_middleware_1.default, fileSharingController_1.default.ListReviewedPassPdfFiles);
+// router.post("/get-file-list", auth, controller.getByFileId);
+// router.post("/send-files-list", auth, controller.ListSenderFile);
+// router.post("/review-fail-files", auth, controller.ListReviewedFailPdfFiles);
+// router.post("/review-pass-files", auth, controller.ListReviewedPassPdfFiles);
 router.put("/grand-access/:id", auth_middleware_1.default, fileSharingController_1.default.GrandAccess);
 router.put("/revoke-access/:id", auth_middleware_1.default, fileSharingController_1.default.RevokeAccess);
-router.get("/received-file/:id", auth_middleware_1.default, fileSharingController_1.default.ReceivedFileById);
-router.get("/send-file/:id", auth_middleware_1.default, fileSharingController_1.default.SendFileById);
 router.get("/file/:fileId", auth_middleware_1.default, fileSharingController_1.default.FilesGetById);
+// router.get("/received-file/:id", auth, controller.ReceivedFileById);
+// router.get("/send-file/:id", auth, controller.SendFileById);
 exports.default = router;
 //# sourceMappingURL=fileSharingRoute.js.map
