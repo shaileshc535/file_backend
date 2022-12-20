@@ -461,152 +461,153 @@ const UpdatePdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
 });
-// const UpdateSignedPdfFile = async (req, res: Response) => {
-//   try {
-//     const user = JSON.parse(JSON.stringify(req.user));
-//     const Time = Date.now();
-//     const imageString = user._id + " : " + moment(Time).format("llll");
-//     const imageName = user._id + Time;
-//     const width = 800;
-//     const height = 300;
-//     const canvas = createCanvas(width, height);
-//     const context = canvas.getContext("2d");
-//     context.fillStyle = "#fff";
-//     context.fillRect(0, 0, width, height);
-//     context.font = "bold 70pt";
-//     context.textAlign = "center";
-//     context.textBaseline = "top";
-//     context.fillStyle = "#000";
-//     context.font = "20pt 'PT Sans'";
-//     context.fillText(imageString, 400, 200);
-//     const buffer = canvas.toBuffer("image/png");
-//     fs.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
-//     const { fileId } = req.body;
-//     const base_url = process.env.BASE_URL;
-//     const file_url = base_url + "/public/pdf/" + req.file.filename;
-//     const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
-//     console.log("stamp_url", stamp_url);
-//     const fileData = await PdfSchema.findOne({
-//       _id: fileId,
-//       isdeleted: false,
-//     }).populate("owner");
-//     if (!fileData) {
-//       logger.error("File not found");
-//       return res.status(200).json({
-//         type: "error",
-//         status: 200,
-//         message: "File not found",
-//       });
-//     }
-//     const getFirstPart = (str) => {
-//       return str.split("_")[0];
-//     };
-//     const getSecondPart = (str) => {
-//       return str.split(".")[1];
-//     };
-//     const firstChar = getFirstPart(fileData.docname);
-//     const secoundChar = getSecondPart(fileData.docname);
-//     const finalVal = firstChar + "_signed" + "." + secoundChar;
-//     const requestData = {
-//       file_url: file_url,
-//       docname: finalVal,
-//       sign_stamp: stamp_url,
-//       filesize: req.file.size,
-//       isupdated: true,
-//       updated_at: Date.now(),
-//       is_signed: true,
-//       is_editable: true,
-//     };
-//     await PdfSchema.findByIdAndUpdate(
-//       {
-//         _id: fileId,
-//       },
-//       requestData
-//     );
-//     const updatedData = await PdfSchema.findOne({
-//       _id: fileId,
-//       isdeleted: false,
-//     });
-//     logger.info({
-//       type: "success",
-//       status: 200,
-//       message: "File Uploaded successfully",
-//       data: updatedData,
-//     });
-//     res.status(200).json({
-//       type: "success",
-//       status: 200,
-//       message: "File Uploaded successfully",
-//       data: updatedData,
-//     });
-//   } catch (error) {
-//     logger.error(error.message);
-//     return res.status(400).json({
-//       type: "error",
-//       status: 400,
-//       message: error.message,
-//     });
-//   }
-// };
-// const FileGetById = async (req, res: Response) => {
-//   try {
-//     const { fileId } = req.params;
-//     const result = await PdfSchema.find({
-//       _id: fileId,
-//       isdeleted: false,
-//     }).populate("owner");
-//     // logger.error(`File Fetched Successfully`);
-//     return res.status(200).json({
-//       status: 200,
-//       type: "success",
-//       message: "File Fetched Successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     // logger.error(error.message);
-//     return res.status(404).json({
-//       type: "error",
-//       status: 404,
-//       message: error.message,
-//     });
-//   }
-// };
-// const CheckPdfFileIsEditable = async (req, res: Response) => {
-//   try {
-//     const { fileId } = req.params;
-//     const result = await PdfSchema.findById({
-//       _id: fileId,
-//     }).populate("owner");
-//     const file = JSON.parse(JSON.stringify(result));
-//     if (result.is_editable !== true) {
-//       // logger.error(
-//       //   `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`
-//       // );
-//       return res.status(400).json({
-//         status: 400,
-//         type: "error",
-//         message: `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`,
-//         editable: result.is_editable,
-//         // data: result,
-//       });
-//     }
-//     // logger.error(`File is Editable`);
-//     return res.status(200).json({
-//       status: 200,
-//       type: "success",
-//       message: "File is Editable",
-//       editable: result.is_editable,
-//       // data: result,
-//     });
-//   } catch (error) {
-//     // logger.error(error.message);
-//     return res.status(404).json({
-//       type: "error",
-//       status: 404,
-//       message: error.message,
-//     });
-//   }
-// };
+// Routes currently not in use
+const UpdateSignedPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = JSON.parse(JSON.stringify(req.user));
+        const Time = Date.now();
+        const imageString = user._id + " : " + (0, moment_1.default)(Time).format("llll");
+        const imageName = user._id + Time;
+        const width = 800;
+        const height = 300;
+        const canvas = (0, canvas_1.createCanvas)(width, height);
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, width, height);
+        context.font = "bold 70pt";
+        context.textAlign = "center";
+        context.textBaseline = "top";
+        context.fillStyle = "#000";
+        context.font = "20pt 'PT Sans'";
+        context.fillText(imageString, 400, 200);
+        const buffer = canvas.toBuffer("image/png");
+        fs_1.default.writeFileSync(`./public/buffer/./${imageName}.png`, buffer);
+        const { fileId } = req.body;
+        const base_url = process.env.BASE_URL;
+        const file_url = base_url + "/public/pdf/" + req.file.filename;
+        const stamp_url = base_url + "/public/buffer/" + imageName + ".png";
+        console.log("stamp_url", stamp_url);
+        const fileData = yield pdf_model_1.default.findOne({
+            _id: fileId,
+            isdeleted: false,
+        }).populate("owner");
+        if (!fileData) {
+            logger_1.default.error("File not found");
+            return res.status(200).json({
+                type: "error",
+                status: 200,
+                message: "File not found",
+            });
+        }
+        const getFirstPart = (str) => {
+            return str.split("_")[0];
+        };
+        const getSecondPart = (str) => {
+            return str.split(".")[1];
+        };
+        const firstChar = getFirstPart(fileData.docname);
+        const secoundChar = getSecondPart(fileData.docname);
+        const finalVal = firstChar + "_signed" + "." + secoundChar;
+        const requestData = {
+            file_url: file_url,
+            docname: finalVal,
+            sign_stamp: stamp_url,
+            filesize: req.file.size,
+            isupdated: true,
+            updated_at: Date.now(),
+            is_signed: true,
+            is_editable: true,
+        };
+        yield pdf_model_1.default.findByIdAndUpdate({
+            _id: fileId,
+        }, requestData);
+        const updatedData = yield pdf_model_1.default.findOne({
+            _id: fileId,
+            isdeleted: false,
+        });
+        logger_1.default.info({
+            type: "success",
+            status: 200,
+            message: "File Uploaded successfully",
+            data: updatedData,
+        });
+        res.status(200).json({
+            type: "success",
+            status: 200,
+            message: "File Uploaded successfully",
+            data: updatedData,
+        });
+    }
+    catch (error) {
+        logger_1.default.error(error.message);
+        return res.status(400).json({
+            type: "error",
+            status: 400,
+            message: error.message,
+        });
+    }
+});
+const FileGetById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { fileId } = req.params;
+        const result = yield pdf_model_1.default.find({
+            _id: fileId,
+            isdeleted: false,
+        }).populate("owner");
+        // logger.error(`File Fetched Successfully`);
+        return res.status(200).json({
+            status: 200,
+            type: "success",
+            message: "File Fetched Successfully",
+            data: result,
+        });
+    }
+    catch (error) {
+        // logger.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
+const CheckPdfFileIsEditable = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { fileId } = req.params;
+        const result = yield pdf_model_1.default.findById({
+            _id: fileId,
+        }).populate("owner");
+        const file = JSON.parse(JSON.stringify(result));
+        if (result.is_editable !== true) {
+            // logger.error(
+            //   `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`
+            // );
+            return res.status(400).json({
+                status: 400,
+                type: "error",
+                message: `${file.owner.fullname} is already edit this pdf if you want to edit now please contact with ${file.owner.fullname}`,
+                editable: result.is_editable,
+                // data: result,
+            });
+        }
+        // logger.error(`File is Editable`);
+        return res.status(200).json({
+            status: 200,
+            type: "success",
+            message: "File is Editable",
+            editable: result.is_editable,
+            // data: result,
+        });
+    }
+    catch (error) {
+        // logger.error(error.message);
+        return res.status(404).json({
+            type: "error",
+            status: 404,
+            message: error.message,
+        });
+    }
+});
 exports.default = {
     GetPdfFileById,
     AddNewPdf,
@@ -615,8 +616,8 @@ exports.default = {
     ReviewPdfFile,
     DeletePdfFile,
     UpdatePdfFile,
-    // UpdateSignedPdfFile,
-    // CheckPdfFileIsEditable,
-    // FileGetById,
+    UpdateSignedPdfFile,
+    CheckPdfFileIsEditable,
+    FileGetById,
 };
 //# sourceMappingURL=pdfController.js.map

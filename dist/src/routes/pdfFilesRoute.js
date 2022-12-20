@@ -46,13 +46,10 @@ router.put("/rename-file", auth_middleware_1.default, pdfController_1.default.re
 router.put("/review-file", auth_middleware_1.default, pdfController_1.default.ReviewPdfFile);
 router.put("/delete-file/:fileId", auth_middleware_1.default, pdfController_1.default.DeletePdfFile);
 router.put("/update-file", auth_middleware_1.default, upload, pdfController_1.default.UpdatePdfFile);
-// router.put("/sign-file", auth, upload, controller.UpdateSignedPdfFile);
 router.get("/get-file/:fileId", auth_middleware_1.default, pdfController_1.default.GetPdfFileById);
-// router.get("/file/:fileId", auth, controller.FileGetById);
-// router.get(
-//   "/file-editable-check/:fileId",
-//   auth,
-//   controller.CheckPdfFileIsEditable
-// );
+// Routes not used currntly
+router.put("/sign-file", auth_middleware_1.default, upload, pdfController_1.default.UpdateSignedPdfFile);
+router.get("/file/:fileId", auth_middleware_1.default, pdfController_1.default.FileGetById);
+router.get("/file-editable-check/:fileId", auth_middleware_1.default, pdfController_1.default.CheckPdfFileIsEditable);
 exports.default = router;
 //# sourceMappingURL=pdfFilesRoute.js.map

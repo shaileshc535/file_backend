@@ -8,16 +8,16 @@ router.post("/share-file", auth, controller.ShareFile);
 router.post("/review-files-list", auth, controller.ListReviewedPdfFiles);
 router.post("/receive-files-list", auth, controller.ListReceivedFile);
 router.post("/signed-files-list", auth, controller.ListSignedPdfFiles);
-// router.post("/get-file-list", auth, controller.getByFileId);
-// router.post("/send-files-list", auth, controller.ListSenderFile);
-// router.post("/review-fail-files", auth, controller.ListReviewedFailPdfFiles);
-// router.post("/review-pass-files", auth, controller.ListReviewedPassPdfFiles);
+router.get("/file/:fileId", auth, controller.FilesGetById);
 
+// Routes not Used Currently
 router.put("/grand-access/:id", auth, controller.GrandAccess);
 router.put("/revoke-access/:id", auth, controller.RevokeAccess);
-
-router.get("/file/:fileId", auth, controller.FilesGetById);
-// router.get("/received-file/:id", auth, controller.ReceivedFileById);
-// router.get("/send-file/:id", auth, controller.SendFileById);
+router.post("/get-file-list", auth, controller.getByFileId);
+router.post("/send-files-list", auth, controller.ListSenderFile);
+router.post("/review-fail-files", auth, controller.ListReviewedFailPdfFiles);
+router.post("/review-pass-files", auth, controller.ListReviewedPassPdfFiles);
+router.get("/received-file/:id", auth, controller.ReceivedFileById);
+router.get("/send-file/:id", auth, controller.SendFileById);
 
 export default router;
