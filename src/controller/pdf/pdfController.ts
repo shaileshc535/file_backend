@@ -516,19 +516,24 @@ const UpdatePdfFile = async (req, res: Response) => {
       return str.split(".")[0];
     };
 
+    const getFirstPartBeforeUnderscore = (str) => {
+      return str.split("_")[0];
+    };
+
     const getSecondPart = (str) => {
       return str.split(".")[1];
     };
 
     const firstChar = getFirstPart(fileData.docname);
+    const finalChar = getFirstPartBeforeUnderscore(firstChar);
     const secoundChar = getSecondPart(fileData.docname);
 
-    const finalVal = firstChar + "_signed" + "." + secoundChar;
+    const finalVal = finalChar + "_signed" + "." + secoundChar;
 
     const requestData = {
       file_url: file_url,
       docname: finalVal,
-      // sign_stamp: stamp_url,
+      sign_stamp: stamp_url,
       filesize: req.file.size,
       isupdated: true,
       updated_at: Date.now(),
@@ -620,6 +625,10 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
     }
 
     const getFirstPart = (str) => {
+      return str.split(".")[0];
+    };
+
+    const getFirstPartBeforeUnderscore = (str) => {
       return str.split("_")[0];
     };
 
@@ -628,9 +637,10 @@ const UpdateSignedPdfFile = async (req, res: Response) => {
     };
 
     const firstChar = getFirstPart(fileData.docname);
+    const finalChar = getFirstPartBeforeUnderscore(firstChar);
     const secoundChar = getSecondPart(fileData.docname);
 
-    const finalVal = firstChar + "_signed" + "." + secoundChar;
+    const finalVal = finalChar + "_signed" + "." + secoundChar;
 
     const requestData = {
       file_url: file_url,
@@ -758,6 +768,8 @@ export default {
   ReviewPdfFile,
   DeletePdfFile,
   UpdatePdfFile,
+
+  // Routes not in use
   UpdateSignedPdfFile,
   CheckPdfFileIsEditable,
   FileGetById,
